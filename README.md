@@ -1,2 +1,3 @@
-# Knights
+# Chaturanga
+
 Chess API for python
