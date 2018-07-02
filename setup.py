@@ -5,14 +5,14 @@ with open('README.md') as f:
     long_description = f.read()
 
 
-setup(name='Knights',
+setup(name='Chaturanga',
       version='0.0.1',
       description='Chess API for python',
       long_description=long_description,
-      url='https://github.com/Cheran-Senthil/Knights',
+      url='https://github.com/Cheran-Senthil/Chaturanga',
       author='Cheran and Mukundan',
       license='MIT',
-      packages=['knights'],
+      packages=['Chaturanga'],
       install_requires=[
           'six',
           'termcolor',
