@@ -12,7 +12,7 @@ setup(name='Chaturanga',
       url='https://github.com/Cheran-Senthil/Chaturanga',
       author='Cheran and Mukundan',
       license='MIT',
-      packages=['Chaturanga'],
+      packages=['chaturanga'],
       install_requires=[
           'six',
           'termcolor',
