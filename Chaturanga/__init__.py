@@ -1,1 +1,0 @@
-from .chessboard import Chessboard
