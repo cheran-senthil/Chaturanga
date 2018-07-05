@@ -1,1 +1,1 @@
-from .chessboard import Chessboard, is_check
+from .chessboard import Chessboard
