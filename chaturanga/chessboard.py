@@ -1,18 +1,29 @@
 from six import python_2_unicode_compatible
 
+'''
 def is_check(board, color):
     if color == 'w':
-        for row_id, row in enumerate(board):
+        for row_num, row in enumerate(board):
             if 'K' in row:
-                col_id = row.index('K')
+                col_num = row.index('K')
+                col = ''.join([r[col_num] for r in board])
                 break
-        print(row_id, col_id, row)
+        r, c = max(row_num - col_num, 0), max(col_num - row_num, 0)
+        di1 = ''.join([board[r + i][c + i] for i in range(8 - max(r, c))])
+        r, c = min(row_num + col_num, 7), max(col_num + row_num - 7, 0)
+        di2 = ''.join([board[r - i][c + i] for i in range(r - c + 1)])
+
     if color == 'b':
-        for row_id, row in enumerate(board):
+        for row_num, row in enumerate(board):
             if 'k' in row:
-                col_id = row.index('k')
+                col_num = row.index('k')
+                col = ''.join([r[col_num] for r in board])
                 break
-        print(row_id, col_id)
+        r, c = max(row_num - col_num, 0), max(col_num - row_num, 0)
+        di1 = ''.join([board[r + i][c + i] for i in range(8 - max(r, c))])
+        r, c = min(row_num + col_num, 7), max(col_num + row_num - 7, 0)
+        di2 = ''.join([board[r - i][c + i] for i in range(r - c + 1)])
+'''
 
 @python_2_unicode_compatible
 class Chessboard:
@@ -50,19 +61,6 @@ class Chessboard:
             self.board.append(board_row)
 
     """
-    def is_check(board, color):
-        if color == 'w':
-            for row_id, row in enumerate(board):
-                if 'K' in row:
-                    col_id = row.index('K')
-                    break
-
-        if color == 'b':
-            for row_id, row in enumerate(board):
-                if 'k' in row:
-                    col_id = row.index('k')
-                    break
-
     def generate_legal_moves(self):
         if self.active_color == 'w':
 
