@@ -1,37 +1,74 @@
 from six import python_2_unicode_compatible
 
-'''
-def is_check(board, color):
-    if color == 'w':
-        for row_num, row in enumerate(board):
-            if 'K' in row:
-                col_num = row.index('K')
-                col = ''.join([r[col_num] for r in board])
-                break
-        r, c = max(row_num - col_num, 0), max(col_num - row_num, 0)
-        di1 = ''.join([board[r + i][c + i] for i in range(8 - max(r, c))])
-        r, c = min(row_num + col_num, 7), max(col_num + row_num - 7, 0)
-        di2 = ''.join([board[r - i][c + i] for i in range(r - c + 1)])
+def is_check(pieces, active_color):
+    if active_color == 'b':
+        pieces = map((swapcase(piece[0]), piece[1], piece[2]), pieces)
+    piece_dict = dict()
+    for piece in pieces:
+        if piece[0] in piece_dict:
+            piece_dict[piece[0]].append((piece[1], piece[2]))
+        else:
+            piece_dict[piece[0]] = [(piece[1], piece[2])]
+    king = piece_dict['K'][0]
 
-    if color == 'b':
-        for row_num, row in enumerate(board):
-            if 'k' in row:
-                col_num = row.index('k')
-                col = ''.join([r[col_num] for r in board])
-                break
-        r, c = max(row_num - col_num, 0), max(col_num - row_num, 0)
-        di1 = ''.join([board[r + i][c + i] for i in range(8 - max(r, c))])
-        r, c = min(row_num + col_num, 7), max(col_num + row_num - 7, 0)
-        di2 = ''.join([board[r - i][c + i] for i in range(r - c + 1)])
-'''
+    # check for attack by knight
+    knights = piece_dict['n']
+    for knight in knights:
+        if (king[0] - knight[0])**2 + (king[1] - knight[1])**2 == 13:
+            return True
+
+    # check for attack by pawn
+    pawns = piece_dict['p']
+    for pawn in pawns:
+        if (king[0] - pawn[0] == 1) and ((king[1] - pawn[1] == 1) or (king[1] - pawn[1] == -1)):
+            return True
+
+    # check if nearest piece in same row is enemy rook or queen
+    row = list(filter(lambda piece: (piece[1] == king[0]) and (piece[2] < king[1]), pieces))
+    if row != []:
+        if max(row, key=lambda x: x[2])[0] in 'rq':
+            return True
+    row = list(filter(lambda piece: (piece[1] == king[0]) and (piece[2] > king[1]), pieces))
+    if row != []:
+        if min(row, key=lambda x: x[2])[0] in 'rq':
+            return True
+
+    # check if nearest piece in same column is enemy rook or queen
+    col = list(filter(lambda piece: (piece[2] == king[1]) and (piece[1] < king[0]), pieces))
+    if col != []:
+        if max(col, key=lambda x: x[1])[0] in 'rq':
+            return True
+    col = list(filter(lambda piece: (piece[2] == king[1]) and (piece[1] > king[0]), pieces))
+    if col != []:
+        if min(col, key=lambda x: x[1])[0] in 'rq':
+            return True
+
+    # check if nearest piece in diagonal is enemy bishop or queen
+    dia = list(filter(lambda piece: (piece[1] + piece[2] == king[0] + king[1]) and (piece[1] < king[0]), pieces))
+    if dia != []:
+        if max(dia, key=lambda x: x[1])[0] in 'bq':
+            return True
+    dia = list(filter(lambda piece: (piece[1] + piece[2] == king[0] + king[1]) and (piece[1] > king[0]), pieces))
+    if dia != []:
+        if min(dia, key=lambda x: x[1])[0] in 'bq':
+            return True
+
+    # check if nearest piece in anti-diagonal is enemy bishop or queen
+    dia = list(filter(lambda piece: (piece[1] - piece[2] == king[0] - king[1]) and (piece[1] < king[0]), pieces))
+    if dia != []:
+        if max(dia, key=lambda x: x[1])[0] in 'bq':
+            return True
+    dia = list(filter(lambda piece: (piece[1] - piece[2] == king[0] - king[1]) and (piece[1] > king[0]), pieces))
+    if dia != []:
+        if min(dia, key=lambda x: x[1])[0] in 'bq':
+            return True
+
+    return False
 
 @python_2_unicode_compatible
 class Chessboard:
     """"""
-    FILES = 'abcdefgh'
-    RANKS = '12345678'
-    WHITE_PIECES = 'PNBRQK'
-    BLACK_PIECES = 'pnbrqk'
+    PIECES = 'PNBRQKpnbrqk'
     STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
     PRETTY_SYMBOLS = {'K' : u'\u2654', 'Q' : u'\u2655', 'R' : u'\u2656',
                       'B' : u'\u2657', 'N' : u'\u2658', 'P' : u'\u2659',
@@ -49,44 +86,22 @@ class Chessboard:
         self.enpassant_target = fields[3]
         self.halfmove_clock = fields[4]
         self.fullmove_number = fields[5]
-        self.board = []
+        self.pieces = []
         rows = self.piece_placement.split('/')
-        for row in rows:
-            board_row = ''
+        for row_num, row in enumerate(rows):
+            col_num = 0
             for square in row:
-                if square in Chessboard.RANKS:
-                    board_row += int(square) * ' '
-                if (square in Chessboard.WHITE_PIECES) or (square in Chessboard.BLACK_PIECES):
-                    board_row += square
-            self.board.append(board_row)
+                if square in '12345678':
+                    col_num += int(square)
+                if square in Chessboard.PIECES:
+                    self.pieces.append((square, row_num, col_num))
+                    col_num += 1
 
     """
     def generate_legal_moves(self):
         if self.active_color == 'w':
 
         if self.active_color == 'b':
-
-
-    def ply(self, move):
-        legal_moves = self.generate_legal_moves()
-        self.fen = legal_moves[1]
-        fields = self.fen.split(' ')
-        self.piece_placement = fields[0]
-        self.active_color = fields[1]
-        self.castling_availability = fields[2]
-        self.enpassant_target = fields[3]
-        self.halfmove_clock = fields[4]
-        self.fullmove_number = fields[5]
-        self.board = []
-        rows = self.piece_placement.split('/')
-        for row in rows:
-            board_row = ''
-            for square in row:
-                if square in Chessboard.RANKS:
-                    board_row += int(square) * ' '
-                if (square in Chessboard.WHITE_PIECES) or (square in Chessboard.BLACK_PIECES):
-                    board_row += square
-            self.board.append(board_row)
     """
 
     def reset(self):
@@ -96,13 +111,10 @@ class Chessboard:
         return self.__str__()
 
     def __str__(self):
-        board = "\n".join(self.board)
+        pieces = self.pieces
         if self.pretty_print:
-            pretty_board = u''
-            for square in board:
-                if square in Chessboard.PRETTY_SYMBOLS:
-                    pretty_board += Chessboard.PRETTY_SYMBOLS[square]
-                else:
-                    pretty_board += square
-            board = pretty_board
-        return board
+            pieces = [(Chessboard.PRETTY_SYMBOLS[piece[0]], piece[1], piece[2]) for piece in pieces]
+        board = [[' ']*8 for _ in range(8)]
+        for piece in pieces:
+            board[piece[1]][piece[2]] = piece[0]
+        return '\n'.join(map(''.join, board))
