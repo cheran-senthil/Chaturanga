@@ -46,15 +46,23 @@ def next_point(ref, points, axis, positive):
 
     return None
 
+def flip(board):
+    flipped_board = dict()
+    for p, piece in board:
+        flipped_board[7 - p[0], p[1]] = swapcase(piece)
+    return flipped_board
+
+
 def is_check(board, active_color):
+    nboard = dict(board)
+    if active_color == 'b':
+        nboard = flip(board)
 
-    # check for black
-
-    pieces = board.keys()
+    pieces = nboard.keys()
 
     enemy_knights = []
     enemy_pawns = []
-    for square, piece in board.items():
+    for square, piece in nboard.items():
         if piece == 'K':
             king = square
         if piece == 'k':
@@ -84,10 +92,10 @@ def is_check(board, active_color):
             p = next_point(king, pieces, axis, positive)
             if p != None:
                 if axis in [0, 1]:
-                    if board[p] in 'qr':
+                    if nboard[p] in 'qr':
                         return True
                 if axis in [2, 3]:
-                    if board[p] in 'qb':
+                    if nboard[p] in 'qb':
                         return True
 
     return False
