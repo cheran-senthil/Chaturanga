@@ -8,11 +8,11 @@ def next_point(ref, points, axis, positive):
         if positive:
             line = list(filter(lambda p: p[1] > ref[1], line))
             if line != []:
-                return min(line, key=lambda p: p[1])[0]
+                return min(line, key=lambda p: p[1])
         else:
             line = list(filter(lambda p: p[1] < ref[1], line))
             if line != []:
-                return max(line, key=lambda p: p[1])[0]
+                return max(line, key=lambda p: p[1])
 
     # next point in same column
     if axis == 1:
@@ -40,30 +40,28 @@ def next_point(ref, points, axis, positive):
 
     if line != []:
         if positive:
-            return min(line, key=lambda p: p[0])[0]
+            return min(line, key=lambda p: p[0])
         else:
-            return max(line, key=lambda p: p[0])[0]
+            return max(line, key=lambda p: p[0])
 
     return None
 
 def is_check(board, active_color):
     pieces = board.keys()
 
-    # swap color if black
-    if active_color == 'b':
-        pass
+    # check for black
 
     enemy_knights = []
     enemy_pawns = []
-    for square, piece in board.items:
+    for square, piece in board.items():
         if piece == 'K':
             king = square
         if piece == 'k':
             enemy_king = square
         if piece == 'n':
-            knights.append(square)
+            enemy_knights.append(square)
         if piece == 'p':
-            pawns.append(square)
+            enemy_pawns.append(square)
 
     # check for attack by enemy king
     if (king[0] - enemy_king[0])**2 + (king[1] - enemy_king[1])**2 < 3:
@@ -83,14 +81,89 @@ def is_check(board, active_color):
     for axis in range(4):
         for positive in [True, False]:
             p = next_point(king, pieces, axis, positive)
-            if axis in [0, 1]:
-                if board[p] in 'qr':
-                    return True
-            if axis in [2, 3]:
-                if board[p] in 'qb':
-                    return True
+            if p != None:
+                if axis in [0, 1]:
+                    if board[p] in 'qr':
+                        return True
+                if axis in [2, 3]:
+                    if board[p] in 'qb':
+                        return True
 
     return False
+
+def get_moves(board, active_color, castling_availability, enpassant_target):
+
+    # check for black
+    
+    moves = []
+    black_pieces = 'pnbrqk'
+    king_moves = [(1, 0), (1, -1), (-1, 0), (-1, -1),
+                  (0, 1), (0, -1), (-1, 1), (1, 1) ]
+    knight_moves = [(-2, 3), (-2, -3), (3, 2), (3, -2),
+                    (-3, 2), (-3, -2), (2, 3), (2, -3)]
+    enpassant_map = {'a6': (2, 0), 'b6': (2, 1), 'c6': (2, 2), 'd6': (2, 3),
+                     'e6': (2, 4), 'f6': (2, 5), 'g6': (2, 6), 'h6': (2, 7)}
+    for start, piece in board.items():
+        if piece == 'P':
+
+            # check square(s) ahead
+            finish = (start[0] - 1, start[1])
+            if finish not in board:
+                moves.append((start, finish))
+                # check if pawn on starting square
+                if start in {(6, col_num) for col_num in range(8)}:
+                    finish = (start[0] - 2, start[1])
+                    if finish not in board:
+                        moves.append((start, finish))
+
+            # check diagonal squares
+            finish = (start[0] - 1, start[1] + 1)
+            if finish in board:
+                if board[finish] in black_pieces:
+                    moves.append((start, finish))
+            finish = (start[0] - 1, start[1] - 1)
+            if finish in board:
+                if board[finish] in black_pieces:
+                    moves.append((start, finish))
+
+            # check enpassant_target
+            if enpassant_target != '-':
+                finish = enpassant_map[enpassant_target]
+                if start[0] - finish[0] == 1:
+                    if abs(start[1] - finish[1]) == 1:
+                        moves.append((start, finish))
+
+        if piece == 'N':
+            for knight_move in knight_moves:
+                finish = tuple(map(sum, zip(start, knight_move)))
+                if (-1 < finish[0] < 8) and (-1 < finish[1] < 8):
+                    if finish not in board:
+                        moves.append((start, finish))
+                    elif board[finish] in black_pieces:
+                        moves.append((start, finish))
+        if piece == 'B':
+            pass
+        if piece == 'R':
+            pass
+        if piece == 'Q':
+            pass
+        if piece == 'K':
+            for king_move in king_moves:
+                finish = tuple(map(sum, zip(start, king_move)))
+                if (-1 < finish[0] < 8) and (-1 < finish[1] < 8):
+                    if finish not in board:
+                        moves.append((start, finish))
+                        if 'K' in castling_availability:
+                            if next_point(start, board, 0, True) == (7, 7):
+                                if board[(7,7)] == 'R':
+                                    moves.append((start, (7, 6)))
+                        if 'Q' in castling_availability:
+                            if next_point(start, board, 0, False) == (7, 0):
+                                if board[(7,0)] == 'R':
+                                    moves.append((start, (7, 2)))
+                    elif board[finish] in black_pieces:
+                        moves.append((start, finish))
+    return moves
 
 @python_2_unicode_compatible
 class Chessboard:
@@ -127,15 +200,24 @@ class Chessboard:
                     col_num += 1
 
     def move(self, ply):
-        all_moves = self.generate_moves()
-        if ply in all_moves:
+        moves = self.get_legal_moves()
+        if ply in moves:
             # change fen
             pass
         else:
             print('Invalid Move!')
 
-    def generate_moves(self):
-        return None
+    def get_legal_moves(self):
+        all_moves = get_moves(self.board, self.active_color,
+                             self.castling_availability, self.enpassant_target)
+        valid_moves = []
+        for move in all_moves:
+            board = dict(self.board)
+            board[move[1]] = board.pop(move[0])
+            # add pop for enpassant_target
+            if is_check(board, self.active_color) == False:
+                valid_moves.append(move)
+        return valid_moves
 
     def reset(self):
         self.__init__()
