@@ -299,16 +299,21 @@ class Chessboard:
 
     def __init__(self, fen=STARTING_FEN, pretty_print=False):
         """Create a new Chessboard"""
-        self.fen = fen
         self.pretty_print = pretty_print
+
+        self.fen = fen
+
         fields = self.fen.split(' ')
+
         self.piece_placement = fields[0]
         self.active_color = fields[1]
         self.castling_availability = fields[2]
         self.enpassant_target = fields[3]
         self.halfmove_clock = int(fields[4])
         self.fullmove_number = int(fields[5])
+
         self.board = {}
+
         rows = self.piece_placement.split('/')
         for row_num, row in enumerate(rows):
             col_num = 0
@@ -318,6 +323,9 @@ class Chessboard:
                 if square in Chessboard.PIECES:
                     self.board[(row_num, col_num)] = square
                     col_num += 1
+
+        self.fen_stack = [self.fen]
+
         three_move_fen = ' '.join(fields[:4])
         self.move_stack = {three_move_fen: 1}
 
@@ -365,6 +373,8 @@ class Chessboard:
                                  str(self.halfmove_clock),
                                  str(self.fullmove_number)])
 
+            self.fen_stack.append(self.fen)
+
             game_status = self.game_status()
             if game_status != '':
                 print(game_status)
@@ -372,10 +382,11 @@ class Chessboard:
             if three_move_fen in self.move_stack:
                 self.move_stack[three_move_fen] += 1
                 if self.move_stack[three_move_fen] == 3:
-                    if game_status != 'Draw!':
+                    if (game_status == '') or (game_status == 'Check'):
                         print('Claim Draw?')
                 if self.move_stack[three_move_fen] == 5:
-                    print('Draw!')
+                    if game_status != 'Draw!':
+                        print('Draw!')
             else:
                 self.move_stack[three_move_fen] = 1
 
@@ -440,6 +451,11 @@ class Chessboard:
             return 'Check!'
 
         return ''
+
+    def undo(self):
+        """Undo a move"""
+        self.fen = self.fen_stack.pop()
+        self.__init__(fen=self.fen)
 
     def reset(self):
         """Reset the Chessboard"""
