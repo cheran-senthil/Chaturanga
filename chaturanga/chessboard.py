@@ -318,6 +318,8 @@ class Chessboard:
                 if square in Chessboard.PIECES:
                     self.board[(row_num, col_num)] = square
                     col_num += 1
+        three_move_fen = ' '.join(fields[:4])
+        self.move_stack = {three_move_fen: 1}
 
     def move(self, ply):
         """Move a piece"""
@@ -354,12 +356,28 @@ class Chessboard:
                 self.active_color = 'w'
                 self.fullmove_number += 1
 
-            self.fen = ' '.join([self.piece_placement,
-                                 self.active_color,
-                                 self.castling_availability,
-                                 self.enpassant_target,
+            three_move_fen = ' '.join([self.piece_placement,
+                                       self.active_color,
+                                       self.castling_availability,
+                                       self.enpassant_target])
+
+            self.fen = ' '.join([three_move_fen,
                                  str(self.halfmove_clock),
                                  str(self.fullmove_number)])
+
+            game_status = self.game_status()
+            if game_status != '':
+                print(game_status)
+
+            if three_move_fen in self.move_stack:
+                self.move_stack[three_move_fen] += 1
+                if self.move_stack[three_move_fen] == 3:
+                    if game_status != 'Draw!':
+                        print('Claim Draw?')
+                if self.move_stack[three_move_fen] == 5:
+                    print('Draw!')
+            else:
+                self.move_stack[three_move_fen] = 1
 
         else:
             print('Invalid Move!')
@@ -400,6 +418,28 @@ class Chessboard:
             return nmoves
 
         return valid_moves
+
+    def game_status(self):
+        """Current Game Status"""
+        board = dict(self.board)
+        moves = self.get_legal_moves()
+        if self.active_color == 'b':
+            board = flip(board)
+
+        if moves == []:
+            if is_check(board):
+                return 'Checkmate!'
+            return 'Stalemate!'
+
+        if self.halfmove_clock == 100:
+            return 'Claim Draw?'
+        if self.halfmove_clock == 150:
+            return 'Draw!'
+
+        if is_check(board):
+            return 'Check!'
+
+        return ''
 
     def reset(self):
         """Reset the Chessboard"""
