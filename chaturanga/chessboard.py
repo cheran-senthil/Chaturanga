@@ -454,8 +454,11 @@ class Chessboard:
 
     def undo(self):
         """Undo a move"""
-        self.fen = self.fen_stack.pop()
-        self.__init__(fen=self.fen)
+        fen_stack = self.fen_stack
+        move_stack = self.move_stack
+        self.__init__(fen=self.fen_stack[-2], pretty_print=self.pretty_print)
+        self.fen_stack = fen_stack[:-2]
+        self.move_stack = move_stack[:-2]
 
     def reset(self):
         """Reset the Chessboard"""
