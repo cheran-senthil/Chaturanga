@@ -1,7 +1,9 @@
+"""Chessboard class and its helper functions"""
+
 from six import python_2_unicode_compatible
 
 def next_point(ref, points, axis, positive):
-
+    """next_point in points w.r.t. ref on given axis and direction"""
     # next point in same row
     if axis == 0:
         line = list(filter(lambda p: p[0] == ref[0], points))
@@ -46,6 +48,7 @@ def next_point(ref, points, axis, positive):
     return None
 
 def flip(board):
+    """Horizontal mirror image of board with inverted colors"""
     flipped_board = dict()
     for square, piece in board.items():
         flipped_board[(7 - square[0], square[1])] = piece.swapcase()
@@ -53,7 +56,7 @@ def flip(board):
 
 
 def is_check(board):
-
+    """True if White in Check, False otherwise"""
     pieces = board.keys()
 
     enemy_knights = []
@@ -88,16 +91,15 @@ def is_check(board):
         for positive in [True, False]:
             square = next_point(king, pieces, axis, positive)
             if square != None:
-                if axis in [0, 1]:
-                    if board[square] in 'qr':
-                        return True
-                if axis in [2, 3]:
-                    if board[square] in 'qb':
-                        return True
+                if (axis in [0, 1]) and (board[square] in 'qr'):
+                    return True
+                if (axis in [2, 3]) and (board[square] in 'qb'):
+                    return True
 
     return False
 
 def get_moves(board, castling_availability, enpassant_square):
+    """List of all moves for white for the given position"""
 
     enemy_pieces = 'pnbrqk'
     knight_moves = [(-1, 2), (-1, -2), (2, 1), (2, -1),
@@ -108,6 +110,7 @@ def get_moves(board, castling_availability, enpassant_square):
     moves = []
 
     for start, piece in board.items():
+
         if piece == 'P':
             # check square(s) ahead
             finish = (start[0] - 1, start[1])
@@ -120,13 +123,11 @@ def get_moves(board, castling_availability, enpassant_square):
                         moves.append((start, finish))
             # check diagonal squares
             finish = (start[0] - 1, start[1] + 1)
-            if finish in board:
-                if board[finish] in enemy_pieces:
-                    moves.append((start, finish))
+            if (finish in board) and (board[finish] in enemy_pieces):
+                moves.append((start, finish))
             finish = (start[0] - 1, start[1] - 1)
-            if finish in board:
-                if board[finish] in enemy_pieces:
-                    moves.append((start, finish))
+            if (finish in board) and (board[finish] in enemy_pieces):
+                moves.append((start, finish))
             # check enpassant_target
             if enpassant_square != None:
                 finish = enpassant_square
@@ -172,13 +173,121 @@ def get_moves(board, castling_availability, enpassant_square):
 
     return moves
 
+def new_b(board, enpassant_target, start, finish, promotion_piece):
+    """Update board"""
+    files = 'abcdefgh'
+    piece = board[start]
+
+    # remove captured pawn for enpassant
+    if piece in 'Pp':
+        if files[finish[1]] == enpassant_target[0]:
+            if finish[0] == 2:
+                board.pop((finish[0] + 1, finish[1]))
+            if finish[0] == 5:
+                board.pop((finish[0] - 1, finish[1]))
+
+    # move rook for castling
+    if piece in 'Kk':
+        rook_finish = (start[0], (start[1] + finish[1])//2)
+        if start[1] - finish[1] == 2:
+            rook_start = (start[0], 0)
+            board[rook_finish] = board.pop(rook_start)
+        if start[1] - finish[1] == -2:
+            rook_start = (start[0], 7)
+            board[rook_finish] = board.pop(rook_start)
+
+    # update piece position
+    board[finish] = board.pop(start)
+
+    # replace last rank pawn with promotion piece
+    if piece in 'Pp':
+        if finish[0] in [0, 7]:
+            board[finish] = promotion_piece
+
+    return board
+
+def new_pp(board):
+    """Update piece_placement"""
+    nboard = [[' ']*8 for _ in range(8)]
+    for square in board:
+        nboard[square[0]][square[1]] = board[square]
+
+    piece_placement = ''
+
+    for row_num in range(8):
+        count = 0
+        for col_num in range(8):
+            square = nboard[row_num][col_num]
+            if square == ' ':
+                count += 1
+            else:
+                if count != 0:
+                    piece_placement += str(count)
+                piece_placement += square
+                count = 0
+        if count != 0:
+            piece_placement += str(count)
+        piece_placement += '/'
+
+    return piece_placement[:-1]
+
+def new_ca(castling_availability, active_color, piece, start):
+    """Update castling_availability"""
+    if active_color == 'w':
+        if piece == 'K':
+            castling_availability.replace('K', '')
+            castling_availability.replace('Q', '')
+        if piece == 'R':
+            if start == (7, 7):
+                castling_availability.replace('K', '')
+            if start == (7, 0):
+                castling_availability.replace('Q', '')
+        return castling_availability
+
+    if piece == 'k':
+        castling_availability.replace('k', '')
+        castling_availability.replace('q', '')
+    if piece == 'r':
+        if start == (0, 7):
+            castling_availability.replace('k', '')
+        if start == (1, 0):
+            castling_availability.replace('q', '')
+
+    if castling_availability == '':
+        castling_availability = '-'
+
+    return castling_availability
+
+def new_et(piece, start, finish):
+    """Update enpassant_target"""
+    files = 'abcdefgh'
+
+    if piece in 'Pp':
+        if abs(start[0] - finish[0]) == 2:
+            row = 8 - (start[0] + finish[0])//2
+            col = start[1]
+            enpassant_target = files[col] + str(row)
+    else:
+        enpassant_target = '-'
+
+    return enpassant_target
+
+def new_hc(board, halfmove_clock, piece, finish):
+    """
+    Update halfmove_clock
+    """
+    if (finish not in board) and (piece not in 'Pp'):
+        halfmove_clock += 1
+    else:
+        halfmove_clock = 0
+    return halfmove_clock
+
 @python_2_unicode_compatible
 class Chessboard:
-    """"""
-    WHITE_PIECES = 'KQRBNP'
-    BLACK_PIECES = 'kqrbnp'
-    PIECES = WHITE_PIECES + BLACK_PIECES
-    FILES = 'abcdefgh'
+    """
+    Chessboard class that supports 2 player games.
+    """
+    PIECES = 'KQRBNPkqrbnp'
     STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
     ENPASSANT_MAP = {'a': (2, 0), 'b': (2, 1), 'c': (2, 2),
                      'd': (2, 3), 'e': (2, 4), 'f': (2, 5),
@@ -211,98 +320,39 @@ class Chessboard:
                     col_num += 1
 
     def move(self, ply):
+        """Move a piece"""
         moves = self.get_legal_moves()
 
-        # change ply to start, end form (and promotion piece)
+        start = ply[0]
+        finish = ply[1]
 
-        if ply in moves:
-            piece = self.board[ply[0]]
+        if self.active_color == 'w':
+            promotion_piece = 'Q'
+        else:
+            promotion_piece = 'q'
 
-            # remove captured pawn for enpassant
-            if piece in 'Pp':
-                if Chessboard.FILES[ply[1][1]] == self.enpassant_target[0]:
-                    if ply[1][0] == 2:
-                        self.board.pop((ply[1][0] + 1, ply[1][1]))
-                    if ply[1][0] == 5:
-                        self.board.pop((ply[1][0] - 1, ply[1][1]))
+        if (start, finish) in moves:
 
-            # move rook for castling
-            if piece in 'Kk':
-                finish = (ply[0][0], (ply[0][1] + ply[1][1])//2)
-                if ply[0][1] - ply[1][1] == 2:
-                    start = (ply[0][0], 0)
-                    self.board[finish] = self.board.pop(start)
-                if ply[0][1] - ply[1][1] == -2:
-                    start = (ply[0][0], 7)
-                    self.board[finish] = self.board.pop(start)
+            piece = self.board[start]
 
-            self.board[ply[1]] = self.board.pop(ply[0])
+            self.halfmove_clock = new_hc(self.board, self.halfmove_clock,
+                                         piece, finish)
 
-            if piece in 'Pp':
-                if ply[1][0] in [0, 7]:
-                    self.board[ply[1]] = 'Q' # remove auto-promote
+            self.board = new_b(self.board, self.enpassant_target,
+                               start, finish, promotion_piece)
+
+            self.castling_availability = new_ca(self.castling_availability,
+                                                self.active_color,
+                                                piece, start)
+
+            self.enpassant_target = new_et(piece, start, finish)
+            self.piece_placement = new_pp(self.board)
 
             if self.active_color == 'w':
                 self.active_color = 'b'
-                if piece == 'K':
-                    self.castling_availability.replace('K', '')
-                    self.castling_availability.replace('Q', '')
-                if piece == 'R':
-                    if ply[0] == (7, 7):
-                        self.castling_availability.replace('K', '')
-                    if ply[0] == (7, 0):
-                        self.castling_availability.replace('Q', '')
-
-            elif self.active_color == 'b':
+            else:
                 self.active_color = 'w'
-                if piece == 'k':
-                    self.castling_availability.replace('k', '')
-                    self.castling_availability.replace('q', '')
-                if piece == 'r':
-                    if ply[0] == (0, 7):
-                        self.castling_availability.replace('k', '')
-                    if ply[0] == (1, 0):
-                        self.castling_availability.replace('q', '')
                 self.fullmove_number += 1
-
-            if self.castling_availability == '':
-                self.castling_availability = '-'
-
-            if piece in 'Pp':
-                if abs(ply[0][0] - ply[1][0]) == 2:
-                    row = 8 - (ply[0][0] + ply[1][0])//2
-                    col = ply[0][1]
-                    self.enpassant_target = Chessboard.FILES[col] + str(row)
-            else:
-                self.enpassant_target = '-'
-
-            if (ply[1] not in self.board) and (piece not in 'Pp'):
-                self.halfmove_clock += 1
-            else:
-                self.halfmove_clock = 0
-
-            self.piece_placement = ''
-
-            board = [[' ']*8 for _ in range(8)]
-            for square in self.board:
-                board[square[0]][square[1]] = self.board[square]
-
-            for row_num in range(8):
-                count = 0
-                for col_num in range(8):
-                    square = board[row_num][col_num]
-                    if square == ' ':
-                        count += 1
-                    else:
-                        if count != 0:
-                            self.piece_placement += str(count)
-                        self.piece_placement += square
-                        count = 0
-                if count != 0:
-                    self.piece_placement += str(count)
-                self.piece_placement += '/'
-
-            self.piece_placement = self.piece_placement[:-1]
 
             self.fen = ' '.join([self.piece_placement,
                                  self.active_color,
@@ -315,25 +365,30 @@ class Chessboard:
             print('Invalid Move!')
 
     def get_legal_moves(self):
-
-        nboard = dict(self.board)
+        """Generate Legal Moves"""
+        board = dict(self.board)
         castling_availability = self.castling_availability
         enpassant_square = Chessboard.ENPASSANT_MAP[self.enpassant_target[0]]
 
         if self.active_color == 'b':
-            nboard = flip(nboard)
+            board = flip(board)
             castling_availability = castling_availability.swapcase()
 
-        all_moves = get_moves(nboard, castling_availability, enpassant_square)
+        all_moves = get_moves(board, castling_availability, enpassant_square)
 
         valid_moves = []
         for move in all_moves:
-            board = dict(nboard)
-            if (board[move[0]] == 'P') and (enpassant_square != None):
+            nboard = dict(board)
+
+            # remove captured pawn for enpassant
+            if (nboard[move[0]] == 'P') and (enpassant_square != None):
                 if move[1] == enpassant_square:
-                    board.pop((move[1][0] + 1, move[1][1]))
-            board[move[1]] = board.pop(move[0])
-            if not is_check(board):
+                    nboard.pop((move[1][0] + 1, move[1][1]))
+
+            # update piece position
+            nboard[move[1]] = nboard.pop(move[0])
+
+            if not is_check(nboard):
                 valid_moves.append(move)
 
         if self.active_color == 'b':
@@ -347,6 +402,7 @@ class Chessboard:
         return valid_moves
 
     def reset(self):
+        """Reset the Chessboard"""
         self.__init__()
 
     def __repr__(self):
