@@ -48,21 +48,19 @@ def next_point(ref, points, axis, positive):
 
 def flip(board):
     flipped_board = dict()
-    for p, piece in board:
-        flipped_board[7 - p[0], p[1]] = swapcase(piece)
+    for p, piece in board.items():
+        flipped_board[(7 - p[0], p[1])] = piece.swapcase()
     return flipped_board
 
 
-def is_check(board, active_color):
-    nboard = dict(board)
-    if active_color == 'b':
-        nboard = flip(board)
+def is_check(board):
 
-    pieces = nboard.keys()
+    pieces = board.keys()
 
     enemy_knights = []
     enemy_pawns = []
-    for square, piece in nboard.items():
+
+    for square, piece in board.items():
         if piece == 'K':
             king = square
         if piece == 'k':
@@ -92,30 +90,26 @@ def is_check(board, active_color):
             p = next_point(king, pieces, axis, positive)
             if p != None:
                 if axis in [0, 1]:
-                    if nboard[p] in 'qr':
+                    if board[p] in 'qr':
                         return True
                 if axis in [2, 3]:
-                    if nboard[p] in 'qb':
+                    if board[p] in 'qb':
                         return True
 
     return False
 
-def get_moves(board, active_color, castling_availability, enpassant_target):
+def get_moves(board, castling_availability, enpassant_square):
 
-    # check for black
-
-    moves = []
     enemy_pieces = 'pnbrqk'
-    king_moves = [(1, 0), (1, -1), (-1, 0), (-1, -1),
-                  (0, 1), (0, -1), (-1, 1), (1, 1) ]
     knight_moves = [(-2, 3), (-2, -3), (3, 2), (3, -2),
                     (-3, 2), (-3, -2), (2, 3), (2, -3)]
-    enpassant_map = {'a6': (2, 0), 'b6': (2, 1), 'c6': (2, 2), 'd6': (2, 3),
-                     'e6': (2, 4), 'f6': (2, 5), 'g6': (2, 6), 'h6': (2, 7)}
+    king_moves = [(1, 0), (1, -1), (-1, 0), (-1, -1),
+                  (0, 1), (0, -1), (-1, 1), (1, 1) ]
+
+    moves = []
 
     for start, piece in board.items():
         if piece == 'P':
-
             # check square(s) ahead
             finish = (start[0] - 1, start[1])
             if finish not in board:
@@ -125,7 +119,6 @@ def get_moves(board, active_color, castling_availability, enpassant_target):
                     finish = (start[0] - 2, start[1])
                     if finish not in board:
                         moves.append((start, finish))
-
             # check diagonal squares
             finish = (start[0] - 1, start[1] + 1)
             if finish in board:
@@ -135,10 +128,9 @@ def get_moves(board, active_color, castling_availability, enpassant_target):
             if finish in board:
                 if board[finish] in enemy_pieces:
                     moves.append((start, finish))
-
             # check enpassant_target
-            if enpassant_target != '-':
-                finish = enpassant_map[enpassant_target]
+            if enpassant_square != None:
+                finish = enpassant_square
                 if start[0] - finish[0] == 1:
                     if abs(start[1] - finish[1]) == 1:
                         moves.append((start, finish))
@@ -151,12 +143,16 @@ def get_moves(board, active_color, castling_availability, enpassant_target):
                         moves.append((start, finish))
                     elif board[finish] in enemy_pieces:
                         moves.append((start, finish))
+
         if piece == 'B':
             pass
+
         if piece == 'R':
             pass
+
         if piece == 'Q':
             pass
+
         if piece == 'K':
             for king_move in king_moves:
                 finish = tuple(map(sum, zip(start, king_move)))
@@ -174,6 +170,7 @@ def get_moves(board, active_color, castling_availability, enpassant_target):
                                     moves.append((start, (7, 2)))
                     elif board[finish] in enemy_pieces:
                         moves.append((start, finish))
+
     return moves
 
 @python_2_unicode_compatible
@@ -183,8 +180,9 @@ class Chessboard:
     BLACK_PIECES = 'kqrbnp'
     PIECES = WHITE_PIECES + BLACK_PIECES
     STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-    ENPASSANT_MAP = {'a6': (2, 0), 'b6': (2, 1), 'c6': (2, 2), 'd6': (2, 3),
-                     'e6': (2, 4), 'f6': (2, 5), 'g6': (2, 6), 'h6': (2, 7)}
+    ENPASSANT_MAP = {'a': (2, 0), 'b': (2, 1), 'c': (2, 2),
+                     'd': (2, 3), 'e': (2, 4), 'f': (2, 5),
+                     'g': (2, 6), 'h': (2, 7), '-': None}
     PRETTY_SYMBOLS = {'K' : u'\u2654', 'Q' : u'\u2655', 'R' : u'\u2656',
                       'B' : u'\u2657', 'N' : u'\u2658', 'P' : u'\u2659',
                       'k' : u'\u265A', 'q' : u'\u265B', 'r' : u'\u265C',
@@ -214,29 +212,43 @@ class Chessboard:
 
     def move(self, ply):
         moves = self.get_legal_moves()
-        if ply == '0-0':
+        # change ply to start, end form
+        if ply in moves:
+            # change fen
             pass
-        if ply == '0-0-0':
-            pass
-        for move in moves:
-            if ply == move[1]:
-                # change fen
-                pass
         else:
             print('Invalid Move!')
 
     def get_legal_moves(self):
-        all_moves = get_moves(self.board, self.active_color,
-                             self.castling_availability, self.enpassant_target)
+
+        nboard = dict(self.board)
+        castling_availability = self.castling_availability
+        enpassant_square = Chessboard.ENPASSANT_MAP[self.enpassant_target[0]]
+
+        if self.active_color == 'b':
+            nboard = flip(nboard)
+            castling_availability = castling_availability.swapcase()
+
+        all_moves = get_moves(nboard, castling_availability, enpassant_square)
+
         valid_moves = []
         for move in all_moves:
-            board = dict(self.board)
-            if (board[move[0]] == 'P') and (self.enpassant_target != '-'):
-                if(move[1] == Chessboard.ENPASSANT_MAP[self.enpassant_target]):
+            board = dict(nboard)
+            if (board[move[0]] == 'P') and (enpassant_square != None):
+                if move[1] == enpassant_square:
                     board.pop((move[1][0] + 1, move[1][1]))
             board[move[1]] = board.pop(move[0])
-            if is_check(board, self.active_color) == False:
+            if is_check(board) == False:
                 valid_moves.append(move)
+
+        if self.active_color == 'b':
+            nmoves = []
+            for move in valid_moves:
+                start = (7 - move[0][0], move[0][1])
+                finish = (7 - move[1][0], move[1][1])
+                nmoves.append((start, finish))
+            return nmoves
+
         return valid_moves
 
     def reset(self):
