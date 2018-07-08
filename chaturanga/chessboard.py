@@ -98,79 +98,100 @@ def is_check(board):
 
     return False
 
-def get_moves(board, castling_availability, enpassant_square):
-    """List of all moves for white for the given position"""
+def get_knight_moves():
+    """Generate a given knight's movement range"""
+    return [(-1, 2), (-1, -2), (2, 1), (2, -1),
+            (-2, 1), (-2, -1), (1, 2), (1, -2)]
 
-    enemy_pieces = 'pnbrqk'
-    knight_moves = [(-1, 2), (-1, -2), (2, 1), (2, -1),
-                    (-2, 1), (-2, -1), (1, 2), (1, -2)]
-    king_moves = [(1, 0), (1, -1), (-1, 0), (-1, -1),
-                  (0, 1), (0, -1), (-1, 1), (1, 1)]
+def get_bishop_moves(board, start):
+    """Generate a given bishop's movement range"""
+    return []
 
+def get_rook_moves(board, start):
+    """Generate a given rook's movement range"""
+    return []
+
+def get_queen_moves(board, start):
+    """Generate a given queen's movement range"""
+    return get_bishop_moves(board, start) + get_rook_moves(board, start)
+
+def get_king_moves():
+    """Generate the king's movement range"""
+    return [(1, 0), (1, -1), (-1, 0), (-1, -1),
+            (0, 1), (0, -1), (-1, 1), (1, 1)]
+
+def get_finish(board, start, moves):
+    """Generates white's finish points w.r.t. start for given moves"""
+    valid_moves = []
+    for move in moves:
+        finish = tuple(map(sum, zip(start, move)))
+        if (-1 < finish[0] < 8) and (-1 < finish[1] < 8):
+            if finish not in board:
+                valid_moves.append((start, finish))
+            elif board[finish] in 'pnbrqk':
+                valid_moves.append((start, finish))
+    return valid_moves
+
+def get_pawn_finish(board, start, enpassant_square):
+    """Generate finish points for a given white pawn"""
     moves = []
-
-    for start, piece in board.items():
-
-        if piece == 'P':
-            # check square(s) ahead
-            finish = (start[0] - 1, start[1])
+    # check square(s) ahead
+    finish = (start[0] - 1, start[1])
+    if finish not in board:
+        moves.append((start, finish))
+        # check if pawn on starting square
+        if start in {(6, col_num) for col_num in range(8)}:
+            finish = (start[0] - 2, start[1])
             if finish not in board:
                 moves.append((start, finish))
-                # check if pawn on starting square
-                if start in {(6, col_num) for col_num in range(8)}:
-                    finish = (start[0] - 2, start[1])
-                    if finish not in board:
-                        moves.append((start, finish))
-            # check diagonal squares
-            finish = (start[0] - 1, start[1] + 1)
-            if (finish in board) and (board[finish] in enemy_pieces):
+    # check diagonal squares
+    finish = (start[0] - 1, start[1] + 1)
+    if (finish in board) and (board[finish] in 'pnbrqk'):
+        moves.append((start, finish))
+    finish = (start[0] - 1, start[1] - 1)
+    if (finish in board) and (board[finish] in 'pnbrqk'):
+        moves.append((start, finish))
+    # check enpassant_target
+    if enpassant_square != None:
+        finish = enpassant_square
+        if start[0] - finish[0] == 1:
+            if abs(start[1] - finish[1]) == 1:
                 moves.append((start, finish))
-            finish = (start[0] - 1, start[1] - 1)
-            if (finish in board) and (board[finish] in enemy_pieces):
-                moves.append((start, finish))
-            # check enpassant_target
-            if enpassant_square != None:
-                finish = enpassant_square
-                if start[0] - finish[0] == 1:
-                    if abs(start[1] - finish[1]) == 1:
-                        moves.append((start, finish))
+    return moves
 
+def get_king_finish(board, start, moves, castling_availability):
+    """Generate finish points for the white king"""
+    valid_moves = get_finish(board, start, moves)
+    if 'K' in castling_availability:
+        if next_point(start, board, 0, True) == (7, 7):
+            valid_moves.append((start, (7, 6)))
+    if 'Q' in castling_availability:
+        if next_point(start, board, 0, False) == (7, 0):
+            valid_moves.append((start, (7, 2)))
+    return valid_moves
+
+def get_moves(board, castling_availability, enpassant_square):
+    """List of all moves for white for the given position"""
+    moves = []
+    for start, piece in board.items():
+        if piece == 'P':
+            moves.extend(get_pawn_finish(board, start, enpassant_square))
         if piece == 'N':
-            for knight_move in knight_moves:
-                finish = tuple(map(sum, zip(start, knight_move)))
-                if (-1 < finish[0] < 8) and (-1 < finish[1] < 8):
-                    if finish not in board:
-                        moves.append((start, finish))
-                    elif board[finish] in enemy_pieces:
-                        moves.append((start, finish))
-
+            knight_moves = get_knight_moves()
+            moves.extend(get_finish(board, start, knight_moves))
         if piece == 'B':
-            pass
-
+            bishop_moves = get_bishop_moves(board, start)
+            moves.extend(get_finish(board, start, bishop_moves))
         if piece == 'R':
-            pass
-
+            rook_moves = get_rook_moves(board, start)
+            moves.extend(get_finish(board, start, rook_moves))
         if piece == 'Q':
-            pass
-
+            queen_moves = get_queen_moves(board, start)
+            moves.extend(get_finish(board, start, queen_moves))
         if piece == 'K':
-            for king_move in king_moves:
-                finish = tuple(map(sum, zip(start, king_move)))
-                if (-1 < finish[0] < 8) and (-1 < finish[1] < 8):
-                    if finish not in board:
-                        moves.append((start, finish))
-                        # check castling
-                        if 'K' in castling_availability:
-                            if next_point(start, board, 0, True) == (7, 7):
-                                if board[(7, 7)] == 'R':
-                                    moves.append((start, (7, 6)))
-                        if 'Q' in castling_availability:
-                            if next_point(start, board, 0, False) == (7, 0):
-                                if board[(7, 0)] == 'R':
-                                    moves.append((start, (7, 2)))
-                    elif board[finish] in enemy_pieces:
-                        moves.append((start, finish))
-
+            king_moves = get_king_moves()
+            moves.extend(get_king_finish(board, start, king_moves,
+                                         castling_availability))
     return moves
 
 def new_b(board, enpassant_target, start, finish, promotion_piece):
@@ -273,9 +294,7 @@ def new_et(piece, start, finish):
     return enpassant_target
 
 def new_hc(board, halfmove_clock, piece, finish):
-    """
-    Update halfmove_clock
-    """
+    """Update halfmove_clock"""
     if (finish not in board) and (piece not in 'Pp'):
         halfmove_clock += 1
     else:
@@ -330,7 +349,7 @@ class Chessboard:
         self.move_count = {partial_fen: 1}
 
     def move(self, ply):
-        """Move a piece"""
+        """Move a Piece"""
         moves = self.get_legal_moves()
 
         start = ply[0]
@@ -348,7 +367,6 @@ class Chessboard:
             cont = True
 
         if ((start, finish) in moves) and cont:
-
             piece = self.board[start]
 
             self.halfmove_clock = new_hc(self.board, self.halfmove_clock,
@@ -408,6 +426,7 @@ class Chessboard:
         valid_moves = []
         for move in all_moves:
             nboard = dict(board)
+            check_flag = is_check(nboard)
 
             # remove captured pawn for enpassant
             if (nboard[move[0]] == 'P') and (enpassant_square != None):
@@ -418,7 +437,17 @@ class Chessboard:
             nboard[move[1]] = nboard.pop(move[0])
 
             if not is_check(nboard):
-                valid_moves.append(move)
+                # check adjacent squares before castling
+                if nboard[move[1]] == 'K':
+                    if abs(move[0][1] - move[1][1]) == 2:
+                        finish = (move[0][1] - move[1][1])//2
+                        nboard[finish] = nboard.pop(move[1])
+                        if (not check_flag) and (not is_check(nboard)):
+                            valid_moves.append(move)
+                    else:
+                        valid_moves.append(move)
+                else:
+                    valid_moves.append(move)
 
         if self.active_color == 'b':
             nmoves = []
@@ -457,7 +486,7 @@ class Chessboard:
         return None
 
     def undo(self):
-        """Undo a move"""
+        """Undo a Move"""
         fen_stack = self.fen_stack
         move_count = self.move_count
         self.__init__(fen=self.fen_stack[-2], pretty_print=self.pretty_print)
