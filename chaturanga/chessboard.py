@@ -5,7 +5,7 @@ from six import python_2_unicode_compatible
 def next_point(ref, points, axis, positive):
     """
     Returns next_point in points w.r.t. ref on given axis and direction.
-    {int: axis} = {0: row, 1: column, 2: diagonal, 3: anti-diagonal}
+    {int: axis} = {0: row, 1: column, 2: anti-diagonal, 3: diagonal}
     """
     if axis == 0:
         line = list(filter(lambda p: p[0] == ref[0], points))
@@ -91,17 +91,70 @@ def get_knight_moves():
     return [(-1, 2), (-1, -2), (2, 1), (2, -1),
             (-2, 1), (-2, -1), (1, 2), (1, -2)]
 
-def get_bishop_moves(board, start):
+def get_bishop_moves(points, start):
     """Generate a given bishop's movement range."""
-    return []
+    moves = []
 
-def get_rook_moves(board, start):
+    for axis in [2, 3]:
+        for positive in [True, False]:
+            bound = next_point(start, points, axis, positive)
+
+            if axis == 2:
+                direction = (1, -1)
+            else:
+                direction = (1, 1)
+
+            if positive:
+                if bound is None:
+                    bound = (7, 7)
+            else:
+                direction = tuple(map(lambda x: -x, direction))
+                if bound is None:
+                    bound = (0, 0)
+
+            bound = bound[0]
+
+            for i in range(1, abs(start[0] - bound) + 1):
+                moves.append(tuple(i*j for j in direction))
+
+    return moves
+
+def get_rook_moves(points, start):
     """Generate a given rook's movement range."""
-    return []
+    moves = []
 
-def get_queen_moves(board, start):
+    for axis in [0, 1]:
+        for positive in [True, False]:
+            bound = next_point(start, points, axis, positive)
+
+            if axis == 0:
+                direction = (1, 0)
+            else:
+                direction = (0, 1)
+
+            if positive:
+                if bound is None:
+                    bound = (7, 7)
+            else:
+                direction = tuple(map(lambda x: -x, direction))
+                if bound is None:
+                    bound = (0, 0)
+
+            if axis == 0:
+                bound = bound[1]
+                move_range = range(1, abs(start[1] - bound) + 1)
+            else:
+                bound = bound[0]
+                move_range = range(1, abs(start[0] - bound) + 1)
+
+            for i in move_range:
+                moves.append(tuple(i*j for j in direction))
+
+    return moves
+
+def get_queen_moves(points, start):
     """Generate a given queen's movement range."""
-    return get_bishop_moves(board, start) + get_rook_moves(board, start)
+    return get_bishop_moves(points, start) + get_rook_moves(points, start)
 
 def get_king_moves():
     """Generate the king's movement range."""
@@ -161,6 +214,7 @@ def get_king_finish(board, start, moves, castling_availability):
 def get_moves(board, castling_availability, enpassant_square):
     """List of all moves for white for the given position."""
     moves = []
+    points = board.keys()
     for start, piece in board.items():
         if piece == 'P':
             moves.extend(get_pawn_finish(board, start, enpassant_square))
@@ -168,13 +222,13 @@ def get_moves(board, castling_availability, enpassant_square):
             knight_moves = get_knight_moves()
             moves.extend(get_finish(board, start, knight_moves))
         if piece == 'B':
-            bishop_moves = get_bishop_moves(board, start)
+            bishop_moves = get_bishop_moves(points, start)
             moves.extend(get_finish(board, start, bishop_moves))
         if piece == 'R':
-            rook_moves = get_rook_moves(board, start)
+            rook_moves = get_rook_moves(points, start)
             moves.extend(get_finish(board, start, rook_moves))
         if piece == 'Q':
-            queen_moves = get_queen_moves(board, start)
+            queen_moves = get_queen_moves(points, start)
             moves.extend(get_finish(board, start, queen_moves))
         if piece == 'K':
             king_moves = get_king_moves()
@@ -271,11 +325,10 @@ def new_et(piece, start, finish):
     """Update enpassant_target"""
     files = 'abcdefgh'
 
-    if piece in 'Pp':
-        if abs(start[0] - finish[0]) == 2:
-            row = 8 - (start[0] + finish[0])//2
-            col = start[1]
-            enpassant_target = files[col] + str(row)
+    if (piece in 'Pp') and (abs(start[0] - finish[0]) == 2):
+        row = 8 - (start[0] + finish[0])//2
+        col = start[1]
+        enpassant_target = files[col] + str(row)
     else:
         enpassant_target = '-'
 
@@ -475,11 +528,17 @@ class Chessboard:
 
     def undo(self):
         """Undo a Move"""
+        current_move = ' '.join(self.fen.split(' ')[:4])
+        self.move_count[current_move] -= 1
+        if self.move_count[current_move] == 0:
+            self.move_count.pop(current_move)
+
         fen_stack = self.fen_stack
         move_count = self.move_count
         self.__init__(fen=self.fen_stack[-2], pretty_print=self.pretty_print)
-        self.fen_stack = fen_stack[:-2]
-        self.move_count = move_count[:-2]
+
+        self.fen_stack = fen_stack[:-1]
+        self.move_count = move_count
 
     def reset(self):
         """Reset the Chessboard"""
