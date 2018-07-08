@@ -6,7 +6,7 @@ As of now, the Chessboard supports input in a (start, stop) format to make a mov
 
 Functionality includes:
 * Chessboard generation from a given valid FEN position
-* Pretty print of the chessboard using UNICODE (optional, defaults to False)
+* Pretty print of the Chessboard using Unicode (optional, defaults to False)
 * Generation of all legal moves for a given position. (including en-passant, castling, and promotion)
 * Identifying potential draw situations (3-fold repitition, 100 plies) and checks.
 * Identification of all game ending criteria (Checkmate, Stalemate, 5-fold repitition, 150 plies)
