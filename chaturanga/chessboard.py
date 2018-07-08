@@ -326,8 +326,8 @@ class Chessboard:
 
         self.fen_stack = [self.fen]
 
-        three_move_fen = ' '.join(fields[:4])
-        self.move_stack = {three_move_fen: 1}
+        partial_fen = ' '.join(fields[:4])
+        self.move_count = {partial_fen: 1}
 
     def move(self, ply):
         """Move a piece"""
@@ -341,7 +341,13 @@ class Chessboard:
         else:
             promotion_piece = 'q'
 
-        if (start, finish) in moves:
+        status = self.game_status()
+        if status in ['Checkmate!', 'Stalemate!', 'Draw!']:
+            cont = False
+        else:
+            cont = True
+
+        if ((start, finish) in moves) and cont:
 
             piece = self.board[start]
 
@@ -364,31 +370,25 @@ class Chessboard:
                 self.active_color = 'w'
                 self.fullmove_number += 1
 
-            three_move_fen = ' '.join([self.piece_placement,
-                                       self.active_color,
-                                       self.castling_availability,
-                                       self.enpassant_target])
+            partial_fen = ' '.join([self.piece_placement,
+                                    self.active_color,
+                                    self.castling_availability,
+                                    self.enpassant_target])
 
-            self.fen = ' '.join([three_move_fen,
+            if partial_fen in self.move_count:
+                self.move_count[partial_fen] += 1
+            else:
+                self.move_count[partial_fen] = 1
+
+            self.fen = ' '.join([partial_fen,
                                  str(self.halfmove_clock),
                                  str(self.fullmove_number)])
 
             self.fen_stack.append(self.fen)
 
-            game_status = self.game_status()
-            if game_status != '':
-                print(game_status)
-
-            if three_move_fen in self.move_stack:
-                self.move_stack[three_move_fen] += 1
-                if self.move_stack[three_move_fen] == 3:
-                    if (game_status == '') or (game_status == 'Check'):
-                        print('Claim Draw?')
-                if self.move_stack[three_move_fen] == 5:
-                    if game_status != 'Draw!':
-                        print('Draw!')
-            else:
-                self.move_stack[three_move_fen] = 1
+            status = self.game_status()
+            if status != None:
+                print(status)
 
         else:
             print('Invalid Move!')
@@ -442,23 +442,27 @@ class Chessboard:
                 return 'Checkmate!'
             return 'Stalemate!'
 
-        if self.halfmove_clock == 100:
-            return 'Claim Draw?'
-        if self.halfmove_clock == 150:
-            return 'Draw!'
+        repitition = max(self.move_count.values())
+        if (self.halfmove_clock == 150) or (repitition == 5):
+            status = 'Draw!'
+            if is_check(board):
+                status = 'Check!\n' + status
+            return status
+        if (self.halfmove_clock == 100) or (repitition == 3):
+            status = 'Claim Draw?'
+            if is_check(board):
+                status = 'Check!\n' + status
+            return status
 
-        if is_check(board):
-            return 'Check!'
-
-        return ''
+        return None
 
     def undo(self):
         """Undo a move"""
         fen_stack = self.fen_stack
-        move_stack = self.move_stack
+        move_count = self.move_count
         self.__init__(fen=self.fen_stack[-2], pretty_print=self.pretty_print)
         self.fen_stack = fen_stack[:-2]
-        self.move_stack = move_stack[:-2]
+        self.move_count = move_count[:-2]
 
     def reset(self):
         """Reset the Chessboard"""
