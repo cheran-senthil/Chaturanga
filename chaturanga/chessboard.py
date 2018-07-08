@@ -3,8 +3,10 @@
 from six import python_2_unicode_compatible
 
 def next_point(ref, points, axis, positive):
-    """next_point in points w.r.t. ref on given axis and direction"""
-    # next point in same row
+    """
+    Returns next_point in points w.r.t. ref on given axis and direction.
+    {int: axis} = {0: row, 1: column, 2: diagonal, 3: anti-diagonal}
+    """
     if axis == 0:
         line = list(filter(lambda p: p[0] == ref[0], points))
         if positive:
@@ -15,31 +17,17 @@ def next_point(ref, points, axis, positive):
             line = list(filter(lambda p: p[1] < ref[1], line))
             if line != []:
                 return max(line, key=lambda p: p[1])
-
-    # next point in same column
     if axis == 1:
         line = list(filter(lambda p: p[1] == ref[1], points))
-        if positive:
-            line = list(filter(lambda p: p[0] > ref[0], line))
-        else:
-            line = list(filter(lambda p: p[0] < ref[0], line))
-
-    # next point in same diagonal
     if axis == 2:
         line = list(filter(lambda p: p[0] + p[1] == ref[0] + ref[1], points))
-        if positive:
-            line = list(filter(lambda p: p[0] > ref[0], line))
-        else:
-            line = list(filter(lambda p: p[0] < ref[0], line))
-
-    # next point in same anti-diagonal
     if axis == 3:
         line = list(filter(lambda p: p[0] - p[1] == ref[0] - ref[1], points))
-        if positive:
-            line = list(filter(lambda p: p[0] > ref[0], line))
-        else:
-            line = list(filter(lambda p: p[0] < ref[0], line))
 
+    if positive:
+        line = list(filter(lambda p: p[0] > ref[0], line))
+    else:
+        line = list(filter(lambda p: p[0] < ref[0], line))
     if line != []:
         if positive:
             return min(line, key=lambda p: p[0])
@@ -48,7 +36,7 @@ def next_point(ref, points, axis, positive):
     return None
 
 def flip(board):
-    """Horizontal mirror image of board with inverted colors"""
+    """Returns horizontal mirror image of board with inverted colors."""
     flipped_board = dict()
     for square, piece in board.items():
         flipped_board[(7 - square[0], square[1])] = piece.swapcase()
@@ -56,7 +44,7 @@ def flip(board):
 
 
 def is_check(board):
-    """True if White in Check, False otherwise"""
+    """Returns True if White in Check, False otherwise."""
     pieces = board.keys()
 
     enemy_knights = []
@@ -72,9 +60,15 @@ def is_check(board):
         if piece == 'p':
             enemy_pawns.append(square)
 
-    # check for attack by enemy king
-    if (king[0] - enemy_king[0])**2 + (king[1] - enemy_king[1])**2 < 3:
-        return True
+    # check for attack by enemy bishops, rooks, and queens
+    for axis in range(4):
+        for positive in [True, False]:
+            square = next_point(king, pieces, axis, positive)
+            if square != None:
+                if (axis in [0, 1]) and (board[square] in 'qr'):
+                    return True
+                if (axis in [2, 3]) and (board[square] in 'qb'):
+                    return True
 
     # check for attack by enemy knights
     for knight in enemy_knights:
@@ -86,42 +80,36 @@ def is_check(board):
         if (king[0] - pawn[0] == 1) and (abs(king[1] - pawn[1]) == 1):
             return True
 
-    # check for attack by enemy bishops, rooks, and queens
-    for axis in range(4):
-        for positive in [True, False]:
-            square = next_point(king, pieces, axis, positive)
-            if square != None:
-                if (axis in [0, 1]) and (board[square] in 'qr'):
-                    return True
-                if (axis in [2, 3]) and (board[square] in 'qb'):
-                    return True
+    # check for attack by enemy king
+    if (king[0] - enemy_king[0])**2 + (king[1] - enemy_king[1])**2 < 3:
+        return True
 
     return False
 
 def get_knight_moves():
-    """Generate a given knight's movement range"""
+    """Generate a knight's movement range."""
     return [(-1, 2), (-1, -2), (2, 1), (2, -1),
             (-2, 1), (-2, -1), (1, 2), (1, -2)]
 
 def get_bishop_moves(board, start):
-    """Generate a given bishop's movement range"""
+    """Generate a given bishop's movement range."""
     return []
 
 def get_rook_moves(board, start):
-    """Generate a given rook's movement range"""
+    """Generate a given rook's movement range."""
     return []
 
 def get_queen_moves(board, start):
-    """Generate a given queen's movement range"""
+    """Generate a given queen's movement range."""
     return get_bishop_moves(board, start) + get_rook_moves(board, start)
 
 def get_king_moves():
-    """Generate the king's movement range"""
+    """Generate the king's movement range."""
     return [(1, 0), (1, -1), (-1, 0), (-1, -1),
             (0, 1), (0, -1), (-1, 1), (1, 1)]
 
 def get_finish(board, start, moves):
-    """Generates white's finish points w.r.t. start for given moves"""
+    """Generates white's finish points w.r.t. start for given moves."""
     valid_moves = []
     for move in moves:
         finish = tuple(map(sum, zip(start, move)))
@@ -133,7 +121,7 @@ def get_finish(board, start, moves):
     return valid_moves
 
 def get_pawn_finish(board, start, enpassant_square):
-    """Generate finish points for a given white pawn"""
+    """Generate finish points for a given white pawn."""
     moves = []
     # check square(s) ahead
     finish = (start[0] - 1, start[1])
@@ -160,7 +148,7 @@ def get_pawn_finish(board, start, enpassant_square):
     return moves
 
 def get_king_finish(board, start, moves, castling_availability):
-    """Generate finish points for the white king"""
+    """Generate finish points for the white king."""
     valid_moves = get_finish(board, start, moves)
     if 'K' in castling_availability:
         if next_point(start, board, 0, True) == (7, 7):
@@ -171,7 +159,7 @@ def get_king_finish(board, start, moves, castling_availability):
     return valid_moves
 
 def get_moves(board, castling_availability, enpassant_square):
-    """List of all moves for white for the given position"""
+    """List of all moves for white for the given position."""
     moves = []
     for start, piece in board.items():
         if piece == 'P':
