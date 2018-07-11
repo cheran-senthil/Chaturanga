@@ -6,12 +6,11 @@ def new_b(board, enpassant_target, start, finish, promotion_piece):
     piece = board[start]
 
     # remove captured pawn for enpassant
-    if piece in 'Pp':
-        if files[finish[1]] == enpassant_target[0]:
-            if finish[0] == 2:
-                board.pop((finish[0] + 1, finish[1]))
-            if finish[0] == 5:
-                board.pop((finish[0] - 1, finish[1]))
+    if files[finish[1]] == enpassant_target[0]:
+        if (piece == 'P') and (finish[0] == 2):
+            board.pop((finish[0] + 1, finish[1]))
+        if (piece == 'p') and (finish[0] == 5):
+            board.pop((finish[0] - 1, finish[1]))
 
     # move rook for castling
     if piece in 'Kk':
