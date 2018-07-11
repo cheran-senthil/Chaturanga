@@ -52,23 +52,20 @@ class Chessboard:
         partial_fen = ' '.join(fields[:4])
         self.move_count = {partial_fen: 1}
 
-    def move(self, ply):
+    def move(self, ply, promotion_piece='Q'):
         """Move a Piece"""
         moves = self.get_legal_moves()
 
         start = ply[0]
         finish = ply[1]
 
-        if self.active_color == 'w':
-            promotion_piece = 'Q'
-        else:
-            promotion_piece = 'q'
+        if self.active_color == 'b':
+            promotion_piece = promotion_piece.lower()
 
-        status = self.game_status()
-        if status in ['Checkmate!', 'Stalemate!', 'Draw!']:
+        cont = True
+        repitition = max(self.move_count.values())
+        if (repitition == 5) or (self.halfmove_clock == 150):
             cont = False
-        else:
-            cont = True
 
         if ((start, finish) in moves) and cont:
             piece = self.board[start]
@@ -109,11 +106,9 @@ class Chessboard:
             self.fen_stack.append(self.fen)
 
             status = self.game_status()
-            if status != None:
-                print(status)
+            return status
 
-        else:
-            print('Invalid Move!')
+        return 'Invalid Move!'
 
     def get_legal_moves(self):
         """Generate Legal Moves"""
