@@ -70,7 +70,7 @@ def is_check(board):
 
     # check for attack by enemy knights
     for knight in enemy_knights:
-        if (king[0] - knight[0])**2 + (king[1] - knight[1])**2 == 13:
+        if (king[0] - knight[0])**2 + (king[1] - knight[1])**2 == 5:
             return True
 
     # check for attack by enemy pawns
