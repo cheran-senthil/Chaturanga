@@ -42,11 +42,10 @@ def get_rook_moves(points, start):
     for axis in [0, 1]:
         for positive in [True, False]:
             bound = next_point(start, points, axis, positive)
-
             if axis == 0:
-                direction = (1, 0)
-            else:
                 direction = (0, 1)
+            else:
+                direction = (1, 0)
 
             if positive:
                 if bound is None:
