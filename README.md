@@ -17,7 +17,6 @@ $ pip install Chaturanga
 * Identification of all game ending criteria (Checkmate, Stalemate, 5-fold repitition, 150 plies)
 * Undoing a move
 * Resetting the Chessboard
+* Chess Bot using Depth Analysis
 
 As of now, the Chessboard supports input in a (start, stop) format to make a move.
-
-A Chess bot using depth analysis is under construction.
