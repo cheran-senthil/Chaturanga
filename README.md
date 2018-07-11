@@ -1,6 +1,6 @@
 # Chaturanga
 
-Chaturanga is a Chess API written in Python that supports two-player games.
+Chaturanga is a Chess API written in Python that supports both single-player and two-player games.
 
 ## Installation
 
@@ -19,4 +19,4 @@ $ pip install Chaturanga
 * Resetting the Chessboard
 * Chess Bot using Depth Analysis
 
-As of now, the Chessboard supports input in a (start, stop) format to make a move.
+As of now, the Chessboard supports input in a long algebraic notation (eg. 'e2e4') to make a move.
