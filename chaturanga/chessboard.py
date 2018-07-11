@@ -4,6 +4,7 @@ from six import python_2_unicode_compatible
 from .check import flip, is_check
 from .moves import get_moves
 from .update import new_b, new_pp, new_ca, new_et, new_hc
+from .notation import san, tup
 
 @python_2_unicode_compatible
 class Chessboard:
@@ -56,8 +57,7 @@ class Chessboard:
         """Move a Piece"""
         moves = self.get_legal_moves()
 
-        start = ply[0]
-        finish = ply[1]
+        start, finish = tup(ply)
 
         if self.active_color == 'b':
             promotion_piece = promotion_piece.lower()
@@ -67,7 +67,7 @@ class Chessboard:
         if (repitition == 5) or (self.halfmove_clock == 150):
             cont = False
 
-        if ((start, finish) in moves) and cont:
+        if (ply in moves) and cont:
             piece = self.board[start]
 
             self.halfmove_clock = new_hc(self.board, self.halfmove_clock,
@@ -154,9 +154,9 @@ class Chessboard:
                 start = (7 - move[0][0], move[0][1])
                 finish = (7 - move[1][0], move[1][1])
                 nmoves.append((start, finish))
-            return nmoves
+            return [san(move) for move in nmoves]
 
-        return valid_moves
+        return [san(move) for move in valid_moves]
 
     def game_status(self):
         """Current Game Status"""

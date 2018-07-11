@@ -68,7 +68,7 @@ def score(position):
     position_value += TEMPO[position.active_color]
     return position_value / 100
 
-def bot(position, depth=3):
+def bot(position, depth=2):
     """Analyzes the board to a given depth"""
     moves = position.get_legal_moves()
     move_evals = []
