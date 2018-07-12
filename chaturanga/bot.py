@@ -77,32 +77,30 @@ def bot(position, depth=2):
         for ply in moves:
             new_position = Chessboard(position.fen)
             game_status = new_position.move(ply)
+            position_score = score(new_position)
             if game_status == 'Checkmate!':
                 position_score = 100
                 if position.active_color == 'b':
                     position_score = -100
-            elif game_status in ['Stalemate!', 'Draw!', 'Claim Draw?']:
+            if game_status in ['Stalemate!', 'Draw!', 'Check!\nDraw!',
+                               'Claim Draw?', 'Check! Claim Draw?']:
                 position_score = 0
-            else:
-                position_score = score(new_position)
             move_evals.append((ply, position_score))
 
-        if position.active_color == 'w':
-            return max(move_evals, key=lambda x: x[1])
-        return min(move_evals, key=lambda x: x[1])
-
-    for ply in moves:
-        new_position = Chessboard(position.fen)
-        game_status = new_position.move(ply)
-        if game_status == 'Checkmate!':
-            position_score = 100
-            if position.active_color == 'b':
-                position_score = -100
-        elif game_status in ['Stalemate!', 'Draw!', 'Claim Draw?']:
-            position_score = 0
-        else:
-            position_score = bot(new_position, depth - 1)[1]
-        move_evals.append((ply, position_score))
+    else:
+        for ply in moves:
+            new_position = Chessboard(position.fen)
+            game_status = new_position.move(ply)
+            if game_status == 'Checkmate!':
+                position_score = 100
+                if position.active_color == 'b':
+                    position_score = -100
+            elif game_status in ['Stalemate!', 'Draw!', 'Check!\nDraw!',
+                                 'Claim Draw?', 'Check! Claim Draw?']:
+                position_score = 0
+            else:
+                position_score = bot(new_position, depth - 1)[1]
+            move_evals.append((ply, position_score))
 
     if position.active_color == 'w':
         return max(move_evals, key=lambda x: x[1])

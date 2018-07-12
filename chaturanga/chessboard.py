@@ -12,10 +12,13 @@ class Chessboard:
     Chessboard class that supports 2 player games.
     """
     PIECES = 'KQRBNPkqrbnp'
+
     STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+
     ENPASSANT_MAP = {'a': (2, 0), 'b': (2, 1), 'c': (2, 2),
                      'd': (2, 3), 'e': (2, 4), 'f': (2, 5),
                      'g': (2, 6), 'h': (2, 7), '-': None}
+
     PRETTY_SYMBOLS = {'K' : u'\u2654', 'Q' : u'\u2655', 'R' : u'\u2656',
                       'B' : u'\u2657', 'N' : u'\u2658', 'P' : u'\u2659',
                       'k' : u'\u265A', 'q' : u'\u265B', 'r' : u'\u265C',
@@ -24,11 +27,9 @@ class Chessboard:
     def __init__(self, fen=STARTING_FEN, pretty_print=False):
         """Create a new Chessboard"""
         self.pretty_print = pretty_print
-
         self.fen = fen
 
         fields = self.fen.split(' ')
-
         self.piece_placement = fields[0]
         self.active_color = fields[1]
         self.castling_availability = fields[2]
@@ -36,6 +37,7 @@ class Chessboard:
         self.halfmove_clock = int(fields[4])
         self.fullmove_number = int(fields[5])
 
+        self.fen_stack = [self.fen]
         self.board = {}
 
         rows = self.piece_placement.split('/')
@@ -48,22 +50,24 @@ class Chessboard:
                     self.board[(row_num, col_num)] = square
                     col_num += 1
 
-        self.fen_stack = [self.fen]
-
-        partial_fen = ' '.join(fields[:4])
-        self.move_count = {partial_fen: 1}
-
     def move(self, ply, promotion_piece='Q'):
         """Move a Piece"""
-        moves = self.get_legal_moves()
-
         start, finish = tup(ply)
+        moves = self.get_legal_moves()
 
         if self.active_color == 'b':
             promotion_piece = promotion_piece.lower()
 
+        fen_frequency = dict()
+        for fen in self.fen_stack:
+            partial_fen = fen.split(' ')[:4]
+            if partial_fen in fen_frequency:
+                fen_frequency[partial_fen] += 1
+            else:
+                fen_frequency[partial_fen] = 1
+        repitition = max(fen_frequency.values())
+
         cont = True
-        repitition = max(self.move_count.values())
         if (repitition == 5) or (self.halfmove_clock == 150):
             cont = False
 
@@ -89,24 +93,16 @@ class Chessboard:
                 self.active_color = 'w'
                 self.fullmove_number += 1
 
-            partial_fen = ' '.join([self.piece_placement,
-                                    self.active_color,
-                                    self.castling_availability,
-                                    self.enpassant_target])
-
-            if partial_fen in self.move_count:
-                self.move_count[partial_fen] += 1
-            else:
-                self.move_count[partial_fen] = 1
-
-            self.fen = ' '.join([partial_fen,
+            self.fen = ' '.join([self.piece_placement,
+                                 self.active_color,
+                                 self.castling_availability,
+                                 self.enpassant_target,
                                  str(self.halfmove_clock),
                                  str(self.fullmove_number)])
 
             self.fen_stack.append(self.fen)
 
-            status = self.game_status()
-            return status
+            return self.game_status()
 
         return 'Invalid Move!'
 
@@ -164,21 +160,30 @@ class Chessboard:
         moves = self.get_legal_moves()
         if self.active_color == 'b':
             board = flip(board)
+        check_status = is_check(board)
 
         if moves == []:
-            if is_check(board):
+            if check_status:
                 return 'Checkmate!'
             return 'Stalemate!'
 
-        repitition = max(self.move_count.values())
+        fen_frequency = dict()
+        for fen in self.fen_stack:
+            partial_fen = fen.split(' ')[:4]
+            if partial_fen in fen_frequency:
+                fen_frequency[partial_fen] += 1
+            else:
+                fen_frequency[partial_fen] = 1
+        repitition = max(fen_frequency.values())
+
         if (self.halfmove_clock == 150) or (repitition == 5):
             status = 'Draw!'
-            if is_check(board):
+            if check_status:
                 status = 'Check!\n' + status
             return status
         if (self.halfmove_clock == 100) or (repitition == 3):
             status = 'Claim Draw?'
-            if is_check(board):
+            if check_status:
                 status = 'Check!\n' + status
             return status
 
@@ -186,17 +191,9 @@ class Chessboard:
 
     def undo(self):
         """Undo a Move"""
-        current_move = ' '.join(self.fen.split(' ')[:4])
-        self.move_count[current_move] -= 1
-        if self.move_count[current_move] == 0:
-            self.move_count.pop(current_move)
-
         fen_stack = self.fen_stack
-        move_count = self.move_count
         self.__init__(fen=self.fen_stack[-2], pretty_print=self.pretty_print)
-
         self.fen_stack = fen_stack[:-1]
-        self.move_count = move_count
 
     def reset(self):
         """Reset the Chessboard"""
