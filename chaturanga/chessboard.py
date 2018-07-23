@@ -60,7 +60,7 @@ class Chessboard:
 
         fen_frequency = dict()
         for fen in self.fen_stack:
-            partial_fen = fen.split(' ')[:4]
+            partial_fen = ' '.join(fen.split(' ')[:4])
             if partial_fen in fen_frequency:
                 fen_frequency[partial_fen] += 1
             else:
@@ -169,7 +169,7 @@ class Chessboard:
 
         fen_frequency = dict()
         for fen in self.fen_stack:
-            partial_fen = fen.split(' ')[:4]
+            partial_fen = ' '.join(fen.split(' ')[:4])
             if partial_fen in fen_frequency:
                 fen_frequency[partial_fen] += 1
             else:
