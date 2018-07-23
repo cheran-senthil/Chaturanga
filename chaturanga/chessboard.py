@@ -135,7 +135,7 @@ class Chessboard:
                 # check adjacent squares before castling
                 if nboard[move[1]] == 'K':
                     if abs(move[0][1] - move[1][1]) == 2:
-                        finish = (move[0][1] - move[1][1])//2
+                        finish = (7, (move[0][1] + move[1][1])//2)
                         nboard[finish] = nboard.pop(move[1])
                         if (not check_flag) and (not is_check(nboard)):
                             valid_moves.append(move)
