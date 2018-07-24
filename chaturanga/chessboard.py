@@ -50,8 +50,14 @@ class Chessboard:
                     self.board[(row_num, col_num)] = square
                     col_num += 1
 
-    def move(self, ply, promotion_piece='Q'):
+    def move(self, ply):
         """Move a Piece"""
+        if len(ply) == 5:
+            ply = ply[:4]
+            promotion_piece = ply[4]
+        else:
+            promotion_piece = 'Q'
+
         start, finish = tup(ply)
         moves = self.get_legal_moves()
 
@@ -71,7 +77,7 @@ class Chessboard:
         if (repitition == 5) or (self.halfmove_clock == 150):
             cont = False
 
-        if (ply in moves) and cont:
+        if (ply in moves) and cont and (promotion_piece in 'bBnNrRqQ'):
             piece = self.board[start]
 
             self.halfmove_clock = new_hc(self.board, self.halfmove_clock,

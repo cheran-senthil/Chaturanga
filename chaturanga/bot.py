@@ -1,5 +1,6 @@
 """Depth Analysis Bot"""
 from .chessboard import Chessboard
+from .notation import tup
 
 TEMPO = {'w': 10, 'b': -10}
 
@@ -103,5 +104,12 @@ def bot(position, depth=2):
             move_evals.append((ply, position_score))
 
     if position.active_color == 'w':
-        return max(move_evals, key=lambda x: x[1])
-    return min(move_evals, key=lambda x: x[1])
+        best_move = max(move_evals, key=lambda x: x[1])
+    else:
+        best_move = min(move_evals, key=lambda x: x[1])
+
+    if best_move[0][-1] in '18':
+        if position.board[tup(best_move[0])[0]] in 'Pp':
+            best_move = (best_move[0] + 'q', best_move[1])
+
+    return best_move
