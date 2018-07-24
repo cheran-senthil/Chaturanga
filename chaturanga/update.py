@@ -57,28 +57,25 @@ def new_pp(board):
 
     return piece_placement[:-1]
 
-def new_ca(castling_availability, active_color, piece, start):
+def new_ca(castling_availability, piece, start):
     """Update castling_availability"""
-    if active_color == 'w':
-        if piece == 'K':
-            castling_availability.replace('K', '')
-            castling_availability.replace('Q', '')
-        if piece == 'R':
-            if start == (7, 7):
-                castling_availability.replace('K', '')
-            if start == (7, 0):
-                castling_availability.replace('Q', '')
-        return castling_availability
+    if piece == 'K':
+        castling_availability = castling_availability.replace('K', '')
+        castling_availability = castling_availability.replace('Q', '')
+    if piece == 'R':
+        if start == (7, 7):
+            castling_availability = castling_availability.replace('K', '')
+        if start == (7, 0):
+            castling_availability = castling_availability.replace('Q', '')
 
     if piece == 'k':
-        castling_availability.replace('k', '')
-        castling_availability.replace('q', '')
+        castling_availability = castling_availability.replace('k', '')
+        castling_availability = castling_availability.replace('q', '')
     if piece == 'r':
         if start == (0, 7):
-            castling_availability.replace('k', '')
+            castling_availability = castling_availability.replace('k', '')
         if start == (1, 0):
-            castling_availability.replace('q', '')
-
+            castling_availability = castling_availability.replace('q', '')
     if castling_availability == '':
         castling_availability = '-'
 

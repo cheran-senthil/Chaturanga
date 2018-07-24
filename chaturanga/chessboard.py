@@ -87,7 +87,6 @@ class Chessboard:
                                start, finish, promotion_piece)
 
             self.castling_availability = new_ca(self.castling_availability,
-                                                self.active_color,
                                                 piece, start)
 
             self.enpassant_target = new_et(piece, start, finish)
