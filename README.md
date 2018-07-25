@@ -20,7 +20,7 @@ $ pip install Chaturanga
 * Chess Engine using Depth Analysis and a Piece-Square Table
 * [Lichess BOT](https://lichess.org/@/SultanKhan2)
 
-As of now, the Chessboard supports input in a [UCI](https://www.shredderchess.com/chess-info/features/uci-universal-chess-interface.html) notation (eg. `e2e4`, `b7b8n`) to make a move.
+As of now, the Chessboard supports input in [UCI](https://www.shredderchess.com/chess-info/features/uci-universal-chess-interface.html) notation (eg. `e2e4`, `b7b8n`) to make a move.
 
 ## License
 
