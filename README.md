@@ -17,6 +17,11 @@ $ pip install Chaturanga
 * Identification of all game ending criteria (Checkmate, Stalemate, 5-fold repitition, 150 plies)
 * Undoing a move
 * Resetting the Chessboard
-* Chess Bot using Depth Analysis
+* Chess Engine using Depth Analysis and a Piece-Square Table
+* [Lichess BOT](https://lichess.org/@/SultanKhan2)
 
-As of now, the Chessboard supports input in a long algebraic notation (eg. 'e2e4') to make a move.
+As of now, the Chessboard supports input in [UCI](https://www.shredderchess.com/chess-info/features/uci-universal-chess-interface.html) notation (eg. `e2e4`, `b7b8n`) to make a move.
+
+## License
+
+[MIT](LICENSE)
