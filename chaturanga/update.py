@@ -73,14 +73,14 @@ def new_ca(board, castling_availability):
             castling_availability = castling_availability.replace('Q', '')
 
     if (0, 7) in board:
-        if board[(7, 7)] != 'r':
+        if board[(0, 7)] != 'r':
             castling_availability = castling_availability.replace('k', '')
     if (0, 0) in board:
-        if board[(7, 0)] != 'r':
+        if board[(0, 0)] != 'r':
             castling_availability = castling_availability.replace('q', '')
 
     if (0, 4) in board:
-        if board[(7, 4)] != 'k':
+        if board[(0, 4)] != 'k':
             castling_availability = castling_availability.replace('k', '')
             castling_availability = castling_availability.replace('q', '')
 
