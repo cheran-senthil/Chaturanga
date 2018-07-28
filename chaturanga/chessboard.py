@@ -53,8 +53,8 @@ class Chessboard:
     def move(self, ply):
         """Move a Piece"""
         if len(ply) == 5:
-            ply = ply[:4]
             promotion_piece = ply[4]
+            ply = ply[:4]
         else:
             promotion_piece = 'Q'
 
