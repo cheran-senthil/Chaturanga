@@ -86,8 +86,8 @@ class Chessboard:
             self.board = new_b(self.board, self.enpassant_target,
                                start, finish, promotion_piece)
 
-            self.castling_availability = new_ca(self.castling_availability,
-                                                piece, start)
+            self.castling_availability = new_ca(self.board,
+                                                self.castling_availability)
 
             self.enpassant_target = new_et(piece, start, finish)
             self.piece_placement = new_pp(self.board)
