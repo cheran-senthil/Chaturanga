@@ -60,23 +60,29 @@ def new_pp(board):
 def new_ca(board, castling_availability):
     """Update castling_availability"""
 
-    if board[(7, 7)] != 'R':
-        castling_availability = castling_availability.replace('K', '')
-    if board[(7, 0)] != 'R':
-        castling_availability = castling_availability.replace('Q', '')
+    if (7, 7) in board:
+        if board[(7, 7)] != 'R':
+            castling_availability = castling_availability.replace('K', '')
+    if (7, 0) in board:
+        if board[(7, 0)] != 'R':
+            castling_availability = castling_availability.replace('Q', '')
 
-    if board[(7, 4)] != 'K':
-        castling_availability = castling_availability.replace('K', '')
-        castling_availability = castling_availability.replace('Q', '')
+    if (7, 4) in board:
+        if board[(7, 4)] != 'K':
+            castling_availability = castling_availability.replace('K', '')
+            castling_availability = castling_availability.replace('Q', '')
 
-    if board[(0, 7)] != 'R':
-        castling_availability = castling_availability.replace('k', '')
-    if board[(0, 0)] != 'R':
-        castling_availability = castling_availability.replace('q', '')
+    if (0, 7) in board:
+        if board[(7, 7)] != 'r':
+            castling_availability = castling_availability.replace('k', '')
+    if (0, 0) in board:
+        if board[(7, 0)] != 'r':
+            castling_availability = castling_availability.replace('q', '')
 
-    if board[(0, 4)] != 'k':
-        castling_availability = castling_availability.replace('k', '')
-        castling_availability = castling_availability.replace('q', '')
+    if (0, 4) in board:
+        if board[(7, 4)] != 'k':
+            castling_availability = castling_availability.replace('k', '')
+            castling_availability = castling_availability.replace('q', '')
 
     if castling_availability == '':
         castling_availability = '-'
