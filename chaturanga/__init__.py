@@ -1,3 +1,3 @@
 """Initialization file"""
 from .chessboard import Chessboard
-from .bot import score, bot
+from .bot import eval_func, bot

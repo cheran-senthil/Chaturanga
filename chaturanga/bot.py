@@ -2,8 +2,6 @@
 from .chessboard import Chessboard
 from .notation import tup
 
-TEMPO = {'w': 10, 'b': -10}
-
 VALUE = {'P':  100, 'N':  280, 'B':  320, 'R':  479, 'Q':  929, 'K':  60000,
          'p': -100, 'n': -280, 'b': -320, 'r': -479, 'q': -929, 'k': -60000}
 
@@ -61,55 +59,44 @@ for value, key in PST_WHITE.items():
     flip = [[-psv for psv in row] for row in key]
     PST[value.lower()] = flip[::-1]
 
-def score(position):
+def eval_func(board, result=None):
     """Assigns a score to a given Chessboard"""
-    position_value = 0
-    for square, piece in position.board.items():
-        position_value += VALUE[piece] + PST[piece][square[0]][square[1]]
-    position_value += TEMPO[position.active_color]
-    return position_value / 100
 
-def bot(position, depth=2):
+    if result == 'Checkmate!':
+        if board.active_color == 'w':
+            return -100
+        return 100
+
+    if result in {'Stalemate!', 'Draw!', 'Check!\nDraw!',
+                  'Claim Draw?', 'Check! Claim Draw?'}:
+        return 0
+
+    val = {'w': 10, 'b': -10}[board.active_color]
+    for index, piece in board.board.items():
+        val += VALUE[piece] + PST[piece][index[0]][index[1]]
+
+    return val / 100
+
+def bot(board, depth=2):
     """Analyzes the board to a given depth"""
-    moves = position.get_legal_moves()
+    game_over = {'Checkmate!', 'Stalemate!', 'Draw!',
+                 'Check!\nDraw!', 'Claim Draw?', 'Check! Claim Draw?'}
     move_evals = []
+    for ply in board.get_legal_moves():
+        result = board.move(ply)
+        if (depth == 1) or (result in game_over):
+            move_evals.append((ply, eval_func(board, result)))
+        else:
+            move_evals.append((ply, bot(board, depth-1)[1]))
+        board.undo()
 
-    if depth == 1:
-        for ply in moves:
-            new_position = Chessboard(position.fen)
-            game_status = new_position.move(ply)
-            position_score = score(new_position)
-            if game_status == 'Checkmate!':
-                position_score = 100
-                if position.active_color == 'b':
-                    position_score = -100
-            if game_status in ['Stalemate!', 'Draw!', 'Check!\nDraw!',
-                               'Claim Draw?', 'Check! Claim Draw?']:
-                position_score = 0
-            move_evals.append((ply, position_score))
-
-    else:
-        for ply in moves:
-            new_position = Chessboard(position.fen)
-            game_status = new_position.move(ply)
-            if game_status == 'Checkmate!':
-                position_score = 100
-                if position.active_color == 'b':
-                    position_score = -100
-            elif game_status in ['Stalemate!', 'Draw!', 'Check!\nDraw!',
-                                 'Claim Draw?', 'Check! Claim Draw?']:
-                position_score = 0
-            else:
-                position_score = bot(new_position, depth - 1)[1]
-            move_evals.append((ply, position_score))
-
-    if position.active_color == 'w':
+    if board.active_color == 'w':
         best_move = max(move_evals, key=lambda x: x[1])
     else:
         best_move = min(move_evals, key=lambda x: x[1])
 
     if best_move[0][-1] in '18':
-        if position.board[tup(best_move[0])[0]] in 'Pp':
+        if board.board[tup(best_move[0])[0]] in 'Pp':
             best_move = (best_move[0] + 'q', best_move[1])
 
     return best_move
