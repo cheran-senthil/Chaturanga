@@ -182,7 +182,7 @@ class Chessboard:
             if check_status:
                 status = 'Check!\n' + status
             return status
-        if (self.halfmove_clock == 100) or (repitition == 3):
+        if (self.halfmove_clock >= 100) or (repitition >= 3):
             status = 'Claim Draw?'
             if check_status:
                 status = 'Check!\n' + status
