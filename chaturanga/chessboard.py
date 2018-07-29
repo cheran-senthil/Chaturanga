@@ -52,17 +52,16 @@ class Chessboard:
 
     def move(self, ply):
         """Move a Piece"""
+        promotion_piece = {'w': 'Q', 'b': 'q'}[self.active_color]
         if len(ply) == 5:
-            promotion_piece = ply[4].upper()
+            if self.active_color == 'w':
+                promotion_piece = ply[4].upper()
+            else:
+                promotion_piece = ply[4].lower()
             ply = ply[:4]
-        else:
-            promotion_piece = 'Q'
 
         start, finish = tup(ply)
         moves = self.get_legal_moves()
-
-        if self.active_color == 'b':
-            promotion_piece = promotion_piece.lower()
 
         fen_frequency = dict()
         for fen in self.fen_stack:
@@ -73,41 +72,38 @@ class Chessboard:
                 fen_frequency[partial_fen] = 1
         repitition = max(fen_frequency.values())
 
-        cont = True
-        if (repitition == 5) or (self.halfmove_clock == 150):
-            cont = False
+        if (ply in moves) and (promotion_piece in 'bBnNrRqQ'):
+            if (repitition != 5) and (self.halfmove_clock != 150):
+                piece = self.board[start]
 
-        if (ply in moves) and cont and (promotion_piece in 'bBnNrRqQ'):
-            piece = self.board[start]
+                self.halfmove_clock = new_hc(self.board, self.halfmove_clock,
+                                             piece, finish)
 
-            self.halfmove_clock = new_hc(self.board, self.halfmove_clock,
-                                         piece, finish)
+                self.board = new_b(self.board, self.enpassant_target,
+                                   start, finish, promotion_piece)
 
-            self.board = new_b(self.board, self.enpassant_target,
-                               start, finish, promotion_piece)
+                self.castling_availability = new_ca(self.board,
+                                                    self.castling_availability)
 
-            self.castling_availability = new_ca(self.board,
-                                                self.castling_availability)
+                self.enpassant_target = new_et(piece, start, finish)
+                self.piece_placement = new_pp(self.board)
 
-            self.enpassant_target = new_et(piece, start, finish)
-            self.piece_placement = new_pp(self.board)
+                if self.active_color == 'w':
+                    self.active_color = 'b'
+                else:
+                    self.active_color = 'w'
+                    self.fullmove_number += 1
 
-            if self.active_color == 'w':
-                self.active_color = 'b'
-            else:
-                self.active_color = 'w'
-                self.fullmove_number += 1
+                self.fen = ' '.join([self.piece_placement,
+                                     self.active_color,
+                                     self.castling_availability,
+                                     self.enpassant_target,
+                                     str(self.halfmove_clock),
+                                     str(self.fullmove_number)])
 
-            self.fen = ' '.join([self.piece_placement,
-                                 self.active_color,
-                                 self.castling_availability,
-                                 self.enpassant_target,
-                                 str(self.halfmove_clock),
-                                 str(self.fullmove_number)])
+                self.fen_stack.append(self.fen)
 
-            self.fen_stack.append(self.fen)
-
-            return self.game_status()
+                return self.game_status()
 
         return 'Invalid Move!'
 
