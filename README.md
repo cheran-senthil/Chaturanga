@@ -13,12 +13,12 @@ $ pip install Chaturanga
 * Chessboard generation from a given valid FEN position
 * Pretty print of the Chessboard using Unicode (optional, defaults to False)
 * Generation of all legal moves for a given position. (including en-passant, castling, and promotion)
-* Identifying potential draw situations (3-fold repitition, 100 plies) and checks.
-* Identification of all game ending criteria (Checkmate, Stalemate, 5-fold repitition, 150 plies)
+* Identifying potential draw situations (3-fold repetition, 100 plies) and checks.
+* Identification of all game ending criteria (Checkmate, Stalemate, 5-fold repetition, 150 plies)
 * Undoing a move
 * Resetting the Chessboard
 * Chess Engine using Depth Analysis and a Piece-Square Table
-* [Lichess BOT](https://lichess.org/@/SultanKhan2)
+* [Lichess BOT](https://lichess.org/@/SultanKhan2) (The bot in considerably faster when using the `speed` branch)
 
 As of now, the Chessboard supports input in [UCI](https://www.shredderchess.com/chess-info/features/uci-universal-chess-interface.html) notation (eg. `e2e4`, `b7b8n`) to make a move.
 
