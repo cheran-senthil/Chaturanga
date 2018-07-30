@@ -68,7 +68,7 @@ def eval_func(board, result=None):
         return 100
 
     if result in {'Stalemate!', 'Draw!', 'Check!\nDraw!',
-                  'Claim Draw?', 'Check! Claim Draw?'}:
+                  'Claim Draw?', 'Check!\nClaim Draw?'}:
         return 0
 
     val = {'w': 10, 'b': -10}[board.active_color]
@@ -80,7 +80,7 @@ def eval_func(board, result=None):
 def bot(board, depth=2):
     """Analyzes the board to a given depth"""
     game_over = {'Checkmate!', 'Stalemate!', 'Draw!',
-                 'Check!\nDraw!', 'Claim Draw?', 'Check! Claim Draw?'}
+                 'Check!\nDraw!', 'Claim Draw?', 'Check!\nClaim Draw?'}
     move_evals = []
     for ply in board.get_legal_moves():
         result = board.move(ply)
