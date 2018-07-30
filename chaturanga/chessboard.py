@@ -61,45 +61,31 @@ class Chessboard:
             ply = ply[:4]
 
         start, finish = tup(ply)
-        moves = self.get_legal_moves()
 
-        fen_frequency = dict()
-        for fen in self.fen_stack:
-            partial_fen = ' '.join(fen.split(' ')[:4])
-            if partial_fen in fen_frequency:
-                fen_frequency[partial_fen] += 1
-            else:
-                fen_frequency[partial_fen] = 1
-        repitition = max(fen_frequency.values())
+        piece = self.board[start]
 
-        if (ply in moves) and (promotion_piece in 'bBnNrRqQ'):
-            if (repitition != 5) and (self.halfmove_clock != 150):
-                piece = self.board[start]
+        self.halfmove_clock = new_hc(self.board, self.halfmove_clock, piece, finish)
+        self.board = new_b(self.board, self.enpassant_target, start, finish, promotion_piece)
+        self.castling_availability = new_ca(self.board, self.castling_availability)
+        self.enpassant_target = new_et(piece, start, finish)
+        self.piece_placement = new_pp(self.board)
 
-                self.halfmove_clock = new_hc(self.board, self.halfmove_clock, piece, finish)
-                self.board = new_b(self.board, self.enpassant_target, start, finish, promotion_piece)
-                self.castling_availability = new_ca(self.board, self.castling_availability)
-                self.enpassant_target = new_et(piece, start, finish)
-                self.piece_placement = new_pp(self.board)
+        if self.active_color == 'w':
+            self.active_color = 'b'
+        else:
+            self.active_color = 'w'
+            self.fullmove_number += 1
 
-                if self.active_color == 'w':
-                    self.active_color = 'b'
-                else:
-                    self.active_color = 'w'
-                    self.fullmove_number += 1
+        self.fen = ' '.join([self.piece_placement,
+                             self.active_color,
+                             self.castling_availability,
+                             self.enpassant_target,
+                             str(self.halfmove_clock),
+                             str(self.fullmove_number)])
 
-                self.fen = ' '.join([self.piece_placement,
-                                     self.active_color,
-                                     self.castling_availability,
-                                     self.enpassant_target,
-                                     str(self.halfmove_clock),
-                                     str(self.fullmove_number)])
+        self.fen_stack.append(self.fen)
 
-                self.fen_stack.append(self.fen)
-
-                return self.game_status()
-
-        return 'Invalid Move!'
+        return self.game_status()
 
     def get_legal_moves(self):
         """Generate Legal Moves"""
