@@ -1,5 +1,6 @@
 """Helper file to test for check"""
 
+
 def next_point(ref, points, axis, positive):
     """
     Returns next_point in points w.r.t. ref on given axis and direction.
@@ -33,6 +34,7 @@ def next_point(ref, points, axis, positive):
 
     return None
 
+
 def flip(board):
     """Returns horizontal mirror image of board with inverted colors."""
     flipped_board = dict()
@@ -62,7 +64,7 @@ def is_check(board):
     for axis in range(4):
         for positive in [True, False]:
             square = next_point(king, pieces, axis, positive)
-            if square != None:
+            if square is not None:
                 if (axis in [0, 1]) and (board[square] in 'qr'):
                     return True
                 if (axis in [2, 3]) and (board[square] in 'qb'):

@@ -2,10 +2,12 @@
 
 from .check import next_point
 
+
 def get_knight_moves():
     """Generate a knight's movement range."""
-    return [(-1, 2), (-1, -2), (2, 1), (2, -1),
-            (-2, 1), (-2, -1), (1, 2), (1, -2)]
+    return [(-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2),
+            (1, -2)]
+
 
 def get_bishop_moves(points, start):
     """Generate a given bishop's movement range."""
@@ -31,9 +33,10 @@ def get_bishop_moves(points, start):
             bound = bound[0]
 
             for i in range(1, abs(start[0] - bound) + 1):
-                moves.append(tuple(i*j for j in direction))
+                moves.append(tuple(i * j for j in direction))
 
     return moves
+
 
 def get_rook_moves(points, start):
     """Generate a given rook's movement range."""
@@ -63,18 +66,21 @@ def get_rook_moves(points, start):
                 move_range = range(1, abs(start[0] - bound) + 1)
 
             for i in move_range:
-                moves.append(tuple(i*j for j in direction))
+                moves.append(tuple(i * j for j in direction))
 
     return moves
+
 
 def get_queen_moves(points, start):
     """Generate a given queen's movement range."""
     return get_bishop_moves(points, start) + get_rook_moves(points, start)
 
+
 def get_king_moves():
     """Generate the king's movement range."""
-    return [(1, 0), (1, -1), (-1, 0), (-1, -1),
-            (0, 1), (0, -1), (-1, 1), (1, 1)]
+    return [(1, 0), (1, -1), (-1, 0), (-1, -1), (0, 1), (0, -1), (-1, 1), (1,
+                                                                           1)]
+
 
 def get_finish(board, start, moves):
     """Generates white's finish points w.r.t. start for given moves."""
@@ -87,6 +93,7 @@ def get_finish(board, start, moves):
             elif board[finish] in 'pnbrqk':
                 valid_moves.append((start, finish))
     return valid_moves
+
 
 def get_pawn_finish(board, start, enpassant_square):
     """Generate finish points for a given white pawn."""
@@ -108,12 +115,13 @@ def get_pawn_finish(board, start, enpassant_square):
     if (finish in board) and (board[finish] in 'pnbrqk'):
         moves.append((start, finish))
     # check enpassant_target
-    if enpassant_square != None:
+    if enpassant_square is not None:
         finish = enpassant_square
         if start[0] - finish[0] == 1:
             if abs(start[1] - finish[1]) == 1:
                 moves.append((start, finish))
     return moves
+
 
 def get_king_finish(board, start, moves, castling_availability):
     """Generate finish points for the white king."""
@@ -125,6 +133,7 @@ def get_king_finish(board, start, moves, castling_availability):
         if next_point(start, board, 0, False) == (7, 0):
             valid_moves.append((start, (7, 2)))
     return valid_moves
+
 
 def get_moves(board, castling_availability, enpassant_square):
     """List of all moves for white for the given position."""
@@ -147,6 +156,7 @@ def get_moves(board, castling_availability, enpassant_square):
             moves.extend(get_finish(board, start, queen_moves))
         if piece == 'K':
             king_moves = get_king_moves()
-            moves.extend(get_king_finish(board, start, king_moves,
-                                         castling_availability))
+            moves.extend(
+                get_king_finish(board, start, king_moves,
+                                castling_availability))
     return moves

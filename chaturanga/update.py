@@ -1,5 +1,6 @@
 """Helper file for updating after a move"""
 
+
 def new_b(board, enpassant_target, start, finish, promotion_piece):
     """Update board"""
     files = 'abcdefgh'
@@ -14,7 +15,7 @@ def new_b(board, enpassant_target, start, finish, promotion_piece):
 
     # move rook for castling
     if piece in 'Kk':
-        rook_finish = (start[0], (start[1] + finish[1])//2)
+        rook_finish = (start[0], (start[1] + finish[1]) // 2)
         if start[1] - finish[1] == 2:
             rook_start = (start[0], 0)
             board[rook_finish] = board.pop(rook_start)
@@ -32,9 +33,10 @@ def new_b(board, enpassant_target, start, finish, promotion_piece):
 
     return board
 
+
 def new_pp(board):
     """Update piece_placement"""
-    nboard = [[' ']*8 for _ in range(8)]
+    nboard = [[' '] * 8 for _ in range(8)]
     for square in board:
         nboard[square[0]][square[1]] = board[square]
 
@@ -56,6 +58,7 @@ def new_pp(board):
         piece_placement += '/'
 
     return piece_placement[:-1]
+
 
 def new_ca(board, castling_availability):
     """Update castling_availability"""
@@ -89,18 +92,20 @@ def new_ca(board, castling_availability):
 
     return castling_availability
 
+
 def new_et(piece, start, finish):
     """Update enpassant_target"""
     files = 'abcdefgh'
 
     if (piece in 'Pp') and (abs(start[0] - finish[0]) == 2):
-        row = 8 - (start[0] + finish[0])//2
+        row = 8 - (start[0] + finish[0]) // 2
         col = start[1]
         enpassant_target = files[col] + str(row)
     else:
         enpassant_target = '-'
 
     return enpassant_target
+
 
 def new_hc(board, halfmove_clock, piece, finish):
     """Update halfmove_clock"""

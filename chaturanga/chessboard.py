@@ -3,8 +3,9 @@ from six import python_2_unicode_compatible
 
 from .check import flip, is_check
 from .moves import get_moves
-from .update import new_b, new_pp, new_ca, new_et, new_hc
 from .notation import san, tup
+from .update import new_b, new_ca, new_et, new_hc, new_pp
+
 
 @python_2_unicode_compatible
 class Chessboard:
@@ -15,14 +16,32 @@ class Chessboard:
 
     STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
-    ENPASSANT_MAP = {'a': (2, 0), 'b': (2, 1), 'c': (2, 2),
-                     'd': (2, 3), 'e': (2, 4), 'f': (2, 5),
-                     'g': (2, 6), 'h': (2, 7), '-': None}
+    ENPASSANT_MAP = {
+        'a': (2, 0),
+        'b': (2, 1),
+        'c': (2, 2),
+        'd': (2, 3),
+        'e': (2, 4),
+        'f': (2, 5),
+        'g': (2, 6),
+        'h': (2, 7),
+        '-': None
+    }
 
-    PRETTY_SYMBOLS = {'K' : u'\u2654', 'Q' : u'\u2655', 'R' : u'\u2656',
-                      'B' : u'\u2657', 'N' : u'\u2658', 'P' : u'\u2659',
-                      'k' : u'\u265A', 'q' : u'\u265B', 'r' : u'\u265C',
-                      'b' : u'\u265D', 'n' : u'\u265E', 'p' : u'\u265F'}
+    PRETTY_SYMBOLS = {
+        'K': u'\u2654',
+        'Q': u'\u2655',
+        'R': u'\u2656',
+        'B': u'\u2657',
+        'N': u'\u2658',
+        'P': u'\u2659',
+        'k': u'\u265A',
+        'q': u'\u265B',
+        'r': u'\u265C',
+        'b': u'\u265D',
+        'n': u'\u265E',
+        'p': u'\u265F'
+    }
 
     def __init__(self, fen=STARTING_FEN, pretty_print=False):
         """Create a new Chessboard"""
@@ -76,9 +95,12 @@ class Chessboard:
             if (repitition != 5) and (self.halfmove_clock != 150):
                 piece = self.board[start]
 
-                self.halfmove_clock = new_hc(self.board, self.halfmove_clock, piece, finish)
-                self.board = new_b(self.board, self.enpassant_target, start, finish, promotion_piece)
-                self.castling_availability = new_ca(self.board, self.castling_availability)
+                self.halfmove_clock = new_hc(self.board, self.halfmove_clock,
+                                             piece, finish)
+                self.board = new_b(self.board, self.enpassant_target, start,
+                                   finish, promotion_piece)
+                self.castling_availability = new_ca(self.board,
+                                                    self.castling_availability)
                 self.enpassant_target = new_et(piece, start, finish)
                 self.piece_placement = new_pp(self.board)
 
@@ -88,12 +110,12 @@ class Chessboard:
                     self.active_color = 'w'
                     self.fullmove_number += 1
 
-                self.fen = ' '.join([self.piece_placement,
-                                     self.active_color,
-                                     self.castling_availability,
-                                     self.enpassant_target,
-                                     str(self.halfmove_clock),
-                                     str(self.fullmove_number)])
+                self.fen = ' '.join([
+                    self.piece_placement, self.active_color,
+                    self.castling_availability, self.enpassant_target,
+                    str(self.halfmove_clock),
+                    str(self.fullmove_number)
+                ])
 
                 self.fen_stack.append(self.fen)
 
@@ -119,7 +141,7 @@ class Chessboard:
             check_flag = is_check(nboard)
 
             # remove captured pawn for enpassant
-            if (nboard[move[0]] == 'P') and (enpassant_square != None):
+            if (nboard[move[0]] == 'P') and (enpassant_square is not None):
                 if move[1] == enpassant_square:
                     nboard.pop((move[1][0] + 1, move[1][1]))
 
@@ -130,7 +152,7 @@ class Chessboard:
                 # check adjacent squares before castling
                 if nboard[move[1]] == 'K':
                     if abs(move[0][1] - move[1][1]) == 2:
-                        finish = (7, (move[0][1] + move[1][1])//2)
+                        finish = (7, (move[0][1] + move[1][1]) // 2)
                         nboard[finish] = nboard.pop(move[1])
                         if (not check_flag) and (not is_check(nboard)):
                             valid_moves.append(move)
@@ -198,7 +220,7 @@ class Chessboard:
         return self.__str__()
 
     def __str__(self):
-        board = [[' ']*8 for _ in range(8)]
+        board = [[' '] * 8 for _ in range(8)]
         for i in self.board:
             if self.pretty_print:
                 board[i[0]][i[1]] = Chessboard.PRETTY_SYMBOLS[self.board[i]]
